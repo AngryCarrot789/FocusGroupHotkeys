@@ -1,0 +1,290 @@
+        public bool OnKeyStroke(string focusedGroup, in KeyStroke stroke) {
+            if (this.ActiveUsages.Count < 1) {
+                this.RootGroup.CollectShortcutsWithPrimaryStroke(stroke, focusedGroup, this.tempShortcutList);
+                if (this.tempShortcutList.Count < 1) {
+                    return this.OnNoSuchShortcutForKeyStroke(stroke);
+                }
+
+                ManagedShortcut instantActivate = this.tempShortcutList.FirstOrDefault(x => !x.Shortcut.HasSecondaryStrokes);
+                if (instantActivate != null) {
+                    this.tempShortcutList.Clear();
+                    return this.OnShortcutActivated(instantActivate);
+                }
+
+                // All shortcuts here have secondary input strokes, because the code above
+                // will attempt to execute the first shortcut that has no second input strokes.
+                // In most cases, the list should ever return 1 item with no secondary inputs, or a list full
+                // of shortcuts that all have secondary inputs (because logically, that's how a key map should work)
+                foreach (ManagedShortcut mc in this.tempShortcutList) {
+                    if (mc.Shortcut is IKeyboardShortcut shortcut) {
+                        IKeyboardShortcutUsage usage = shortcut.CreateKeyUsage();
+                        this.ActiveUsages[usage] = mc;
+                        this.OnShortcutUsageCreated(usage, mc);
+                    }
+                }
+
+                this.tempShortcutList.Clear();
+                if (this.ActiveUsages.Count > 0) {
+                    return this.OnShortcutUsagesCreated();
+                }
+                else {
+                    return this.OnNoSuchShortcutForKeyStroke(stroke);
+                }
+            }
+            else {
+                List<KeyValuePair<IShortcutUsage, ManagedShortcut>> validPairs = new List<KeyValuePair<IShortcutUsage, ManagedShortcut>>();
+                foreach (KeyValuePair<IShortcutUsage, ManagedShortcut> pair in this.ActiveUsages) {
+                    // Just in case, check if it's already completed. By default, it never should be
+                    if (pair.Key.IsCompleted) {
+                        this.ActiveUsages.Clear();
+                        return this.OnShortcutActivated(pair.Value);
+                    }
+
+                    bool strokeAccepted;
+                    if (pair.Key is IKeyboardShortcutUsage usage) {
+                        if (usage.IsCurrentStrokeKeyBased) {
+                            if (usage.CurrentKeyStroke.IsKeyRelease && !stroke.IsKeyRelease) {
+                                if (this.ShouldIgnorePressWhenRequiredStrokeIsRelease(usage, pair.Value, stroke)) {
+                                    validPairs.Add(pair);
+                                    continue;
+                                }
+                            }
+
+                            if (stroke.IsKeyRelease && !usage.IsCompleted && !usage.CurrentKeyStroke.IsKeyRelease) {
+                                if (this.ShouldIgnoreReleaseWhenRequiredStrokeIsPress(usage, pair.Value, stroke)) {
+                                    validPairs.Add(pair);
+                                    continue;
+                                }
+                            }
+
+                            strokeAccepted = usage.OnKeyStroke(stroke);
+                        }
+                        else if (usage.PreviousStroke is KeyStroke lastKey) {
+                            if (lastKey.IsKeyRelease && !stroke.IsKeyRelease) {
+                                if (this.ShouldIgnorePressWhenRequiredStrokeIsRelease(usage, pair.Value, stroke)) {
+                                    validPairs.Add(pair);
+                                    continue;
+                                }
+                            }
+
+                            if (stroke.IsKeyRelease && !usage.IsCompleted && !lastKey.IsKeyRelease) {
+                                if (this.ShouldIgnoreReleaseWhenRequiredStrokeIsPress(usage, pair.Value, stroke)) {
+                                    validPairs.Add(pair);
+                                    continue;
+                                }
+                            }
+
+                            strokeAccepted = usage.OnKeyStroke(stroke);
+                        }
+                        else {
+                            strokeAccepted = false;
+                        }
+                    }
+                    else {
+                        continue;
+                    }
+
+                    if (strokeAccepted) {
+                        if (usage.IsCompleted) {
+                            try {
+                                return this.OnShortcutActivated(pair.Value);
+                            }
+                            finally {
+                                this.ActiveUsages.Clear();
+                            }
+                        }
+                        else if (this.OnSecondShortcutUsageProgressed(pair.Key, pair.Value)) {
+                            validPairs.Add(pair);
+                        }
+                    }
+                    else if (!this.OnCancelUsageForNoSuchNextKeyStroke(pair.Key, pair.Value, stroke)) {
+                        validPairs.Add(pair);
+                    }
+                }
+
+                this.ActiveUsages.Clear();
+                if (validPairs.Count < 1) {
+                    return this.OnNoSuchShortcutForKeyStroke(stroke);
+                }
+                else {
+                    foreach (KeyValuePair<IShortcutUsage, ManagedShortcut> pair in validPairs) {
+                        this.ActiveUsages[pair.Key] = pair.Value;
+                    }
+
+                    return this.OnSecondShortcutUsagesProgressed();
+                }
+            }
+        }
+
+        public bool OnMouseStroke(string focusedGroup, in MouseStroke stroke) {
+            if (this.ActiveUsages.Count < 1) {
+                this.RootGroup.CollectShortcutsWithPrimaryStroke(stroke, focusedGroup, this.tempShortcutList);
+                if (this.tempShortcutList.Count < 1) {
+                    return this.OnNoSuchShortcutForMouseStroke(stroke);
+                }
+
+                ManagedShortcut instantActivate = this.tempShortcutList.FirstOrDefault(x => !x.Shortcut.HasSecondaryStrokes);
+                if (instantActivate != null) {
+                    return this.OnShortcutActivated(instantActivate);
+                }
+
+                // All shortcuts here have secondary input strokes, because the code above
+                // will attempt to execute the first shortcut that has no second input strokes.
+                // In most cases, the list should ever return 1 item with no secondary inputs, or a list full
+                // of shortcuts that all have secondary inputs (because logically, that's how a key map should work)
+                foreach (ManagedShortcut mc in this.tempShortcutList) {
+                    if (mc.Shortcut is IMouseShortcut shortcut) {
+                        IMouseShortcutUsage usage = shortcut.CreateMouseUsage();
+                        this.ActiveUsages[usage] = mc;
+                        this.OnShortcutUsageCreated(usage, mc);
+                    }
+                }
+
+                this.tempShortcutList.Clear();
+                if (this.ActiveUsages.Count > 0) {
+                    return this.OnShortcutUsagesCreated();
+                }
+                else {
+                    return this.OnNoSuchShortcutForMouseStroke(stroke);
+                }
+            }
+            else {
+                List<KeyValuePair<IShortcutUsage, ManagedShortcut>> validPairs = new List<KeyValuePair<IShortcutUsage, ManagedShortcut>>();
+                foreach (KeyValuePair<IShortcutUsage, ManagedShortcut> pair in this.ActiveUsages) {
+                    // Just in case, check if it's already completed. By default, it never should be
+                    if (pair.Key.IsCompleted) {
+                        this.ActiveUsages.Clear();
+                        return this.OnShortcutActivated(pair.Value);
+                    }
+
+                    bool strokeAccepted;
+                    if (pair.Key is IMouseShortcutUsage usage) {
+                        if (usage.IsCurrentStrokeMouseBased) {
+                            if (!usage.CurrentMouseStroke.IsButtonDown && stroke.IsButtonDown) {
+                                if (this.ShouldIgnoreClickWhenRequiredStrokeIsRelease(usage, pair.Value, stroke)) {
+                                    validPairs.Add(pair);
+                                    continue;
+                                }
+                            }
+
+                            if (!stroke.IsButtonDown && !usage.IsCompleted && usage.CurrentMouseStroke.IsButtonDown) {
+                                if (this.ShouldIgnoreReleaseWhenRequiredStrokeIsClick(usage, pair.Value, stroke)) {
+                                    validPairs.Add(pair);
+                                    continue;
+                                }
+                            }
+
+                            strokeAccepted = usage.OnMouseStroke(stroke);
+                        }
+                        else {
+                            strokeAccepted = false;
+                        }
+                    }
+                    else {
+                        continue;
+                    }
+
+                    if (strokeAccepted) {
+                        if (usage.IsCompleted) {
+                            try {
+                                return this.OnShortcutActivated(pair.Value);
+                            }
+                            finally {
+                                this.ActiveUsages.Clear();
+                            }
+                        }
+                        else if (this.OnSecondShortcutUsageProgressed(pair.Key, pair.Value)) {
+                            validPairs.Add(pair);
+                        }
+                    }
+                    else if (!this.OnCancelUsageForNoSuchNextMouseStroke(pair.Key, pair.Value, stroke)) {
+                        validPairs.Add(pair);
+                    }
+                }
+
+                this.ActiveUsages.Clear();
+                if (validPairs.Count < 1) {
+                    return this.OnNoSuchShortcutForMouseStroke(stroke);
+                }
+                else {
+                    foreach (KeyValuePair<IShortcutUsage, ManagedShortcut> pair in validPairs) {
+                        this.ActiveUsages[pair.Key] = pair.Value;
+                    }
+
+                    return this.OnSecondShortcutUsagesProgressed();
+                }
+            }
+        }
+
+        public bool OnInputStroke(string focusedGroup, IInputStroke stroke) {
+            if (this.ActiveUsages.Count < 1) {
+                this.RootGroup.CollectShortcutsWithPrimaryStroke(stroke, focusedGroup, this.tempShortcutList);
+                if (this.tempShortcutList.Count < 1) {
+                    return this.OnNoSuchShortcutForInputStroke(stroke);
+                }
+
+                ManagedShortcut instantActivate = this.tempShortcutList.FirstOrDefault(x => !x.Shortcut.HasSecondaryStrokes);
+                if (instantActivate != null) {
+                    this.tempShortcutList.Clear();
+                    return this.OnShortcutActivated(instantActivate);
+                }
+
+                // All shortcuts here have secondary input strokes, because the code above
+                // will attempt to execute the first shortcut that has no second input strokes.
+                // In most cases, the list should ever return 1 item with no secondary inputs, or a list full
+                // of shortcuts that all have secondary inputs (because logically, that's how a key map should work)
+                foreach (ManagedShortcut mc in this.tempShortcutList) {
+                    IShortcutUsage usage = mc.Shortcut.CreateUsage();
+                    this.ActiveUsages[usage] = mc;
+                    this.OnShortcutUsageCreated(usage, mc);
+                }
+
+                this.tempShortcutList.Clear();
+                if (this.ActiveUsages.Count > 0) {
+                    return this.OnShortcutUsagesCreated();
+                }
+                else {
+                    return this.OnNoSuchShortcutForInputStroke(stroke);
+                }
+            }
+            else {
+                List<KeyValuePair<IShortcutUsage, ManagedShortcut>> validPairs = new List<KeyValuePair<IShortcutUsage, ManagedShortcut>>();
+                foreach (KeyValuePair<IShortcutUsage, ManagedShortcut> pair in this.ActiveUsages) {
+                    // Just in case, check if it's already completed. By default, it never should be
+                    if (pair.Key.IsCompleted) {
+                        this.ActiveUsages.Clear();
+                        return this.OnShortcutActivated(pair.Value);
+                    }
+
+                    bool strokeAccepted = pair.Key.OnInputStroke(stroke);
+                    if (strokeAccepted) {
+                        if (pair.Key.IsCompleted) {
+                            try {
+                                return this.OnShortcutActivated(pair.Value);
+                            }
+                            finally {
+                                this.ActiveUsages.Clear();
+                            }
+                        }
+                        else if (this.OnSecondShortcutUsageProgressed(pair.Key, pair.Value)) {
+                            validPairs.Add(pair);
+                        }
+                    }
+                    else if (!this.OnCancelUsageForNoSuchNextInputStroke(pair.Key, pair.Value, stroke)) {
+                        validPairs.Add(pair);
+                    }
+                }
+
+                this.ActiveUsages.Clear();
+                if (validPairs.Count < 1) {
+                    return this.OnNoSuchShortcutForInputStroke(stroke);
+                }
+                else {
+                    foreach (KeyValuePair<IShortcutUsage, ManagedShortcut> pair in validPairs) {
+                        this.ActiveUsages[pair.Key] = pair.Value;
+                    }
+
+                    return this.OnSecondShortcutUsagesProgressed();
+                }
+            }
+        }

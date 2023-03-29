@@ -1,0 +1,31 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 16
+VisualStudioVersion = 16.0.33130.400
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FocusGroupHotkeys", "FocusGroupHotkeys\FocusGroupHotkeys.csproj", "{F36B0871-8827-4F5F-9655-7CE1813AA5B8}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FocusGroupHotkeys.Core", "FocusGroupHotkeys.Core\FocusGroupHotkeys.Core.csproj", "{632A016C-7FE1-482F-A20A-13B89DC170A6}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{F36B0871-8827-4F5F-9655-7CE1813AA5B8}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{F36B0871-8827-4F5F-9655-7CE1813AA5B8}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{F36B0871-8827-4F5F-9655-7CE1813AA5B8}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{F36B0871-8827-4F5F-9655-7CE1813AA5B8}.Release|Any CPU.Build.0 = Release|Any CPU
+		{632A016C-7FE1-482F-A20A-13B89DC170A6}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{632A016C-7FE1-482F-A20A-13B89DC170A6}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{632A016C-7FE1-482F-A20A-13B89DC170A6}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{632A016C-7FE1-482F-A20A-13B89DC170A6}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {37ED05F7-018E-47DE-8C5C-047ED4FEC78B}
+	EndGlobalSection
+EndGlobal
