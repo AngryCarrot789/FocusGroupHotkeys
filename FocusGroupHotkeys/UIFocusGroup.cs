@@ -58,11 +58,11 @@ namespace FocusGroupHotkeys {
         }
 
         public static void SetIsGlobalShortcutFocusTarget(UIElement element, bool value) {
-            element.SetValue(UIFocusGroup.IsGlobalShortcutFocusTargetProperty, value);
+            element.SetValue(IsGlobalShortcutFocusTargetProperty, value);
         }
 
         public static bool GetIsGlobalShortcutFocusTarget(UIElement element) {
-            return (bool) element.GetValue(UIFocusGroup.IsGlobalShortcutFocusTargetProperty);
+            return (bool) element.GetValue(IsGlobalShortcutFocusTargetProperty);
         }
 
         public static void SetUsageID(DependencyObject element, string value) {

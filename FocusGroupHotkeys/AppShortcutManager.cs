@@ -87,7 +87,7 @@ namespace FocusGroupHotkeys {
             usageMap[usageId] = handler;
         }
 
-        // Typically changes on a window only
+        // Typically applied only to windows
         public static void OnIsGlobalShortcutFocusTargetChanged(DependencyObject d, DependencyPropertyChangedEventArgs e) {
             if (d is UIElement element) {
                 element.PreviewMouseDown -= OnWindowPreviewMouseDown;
@@ -96,7 +96,6 @@ namespace FocusGroupHotkeys {
                 element.KeyDown -= OnWindowKeyDown;
                 element.KeyUp -= OnWindowKeyUp;
                 element.MouseWheel -= OnWindowMouseWheel;
-                FocusManager.RemoveGotFocusHandler(element, OnGotWindowElementFocus);
                 if (e.NewValue != e.OldValue && (bool) e.NewValue) {
                     element.PreviewMouseDown += OnWindowPreviewMouseDown;
                     element.MouseDown += OnWindowMouseDown;
@@ -104,16 +103,11 @@ namespace FocusGroupHotkeys {
                     element.KeyDown += OnWindowKeyDown;
                     element.KeyUp += OnWindowKeyUp;
                     element.MouseWheel += OnWindowMouseWheel;
-                    FocusManager.AddGotFocusHandler(element, OnGotWindowElementFocus);
                 }
             }
             else {
                 throw new Exception("This property must be applied to type UIElement only, not " + (d?.GetType()));
             }
-        }
-
-        private static void OnGotWindowElementFocus(object sender, RoutedEventArgs e) {
-            
         }
 
         private static void OnWindowPreviewMouseDown(object sender, MouseButtonEventArgs e) {
@@ -132,6 +126,12 @@ namespace FocusGroupHotkeys {
             }
         }
 
+        // Handling mouse up makes the shortcuts way harder to manage, because there's so many edge cases to consider
+        // e.g how do you handle double/triple/etc click while ignoring mouse down/up if the next usage expects a mouse up/down,
+        // while also checking checking all of the active usages. Just too much extra work... might try and re-implement it some day
+        // 
+        // It works with keys, because they can only be "clicked" once, unlike mouse input, which can have multiple clicks. Also
+        // thought about implementing a key stroke click count... but operating systems don't typically do that so i'd have to implement it myself :(
         private static void OnWindowMouseUp(object sender, MouseButtonEventArgs e) {
             // if (e.OriginalSource is DependencyObject hit) {
             //     string focusedPath = UIFocusGroup.ProcessFocusGroupChange(hit);

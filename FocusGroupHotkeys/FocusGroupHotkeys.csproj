@@ -59,7 +59,6 @@
     <Compile Include="Bindings\ShortcutBinding.cs" />
     <Compile Include="Converters\KeyStrokeRepresentationConverter.cs" />
     <Compile Include="Converters\MouseStrokeRepresentationConverter.cs" />
-    <Compile Include="FocusableGroupBox.cs" />
     <Compile Include="MainView\MainViewModel.cs" />
     <Compile Include="MainView\MainWindow.xaml.cs">
       <DependentUpon>MainWindow.xaml</DependentUpon>
@@ -87,7 +86,6 @@
     </Compile>
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Panels\Panel1ViewModel.cs" />
     <Compile Include="Properties\AssemblyInfo.cs">
       <SubType>Code</SubType>
     </Compile>
