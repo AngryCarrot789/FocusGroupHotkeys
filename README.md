@@ -1,9 +1,9 @@
 # FocusGroupHotkeys
 An app for managing multi-stage key and mouse shortcuts (e.g. the similar behaviour found in Intellij IDEA, Visual Studio, etc)
 
-This can be used to create shotcuts like "CTRL + M, CTRL + X" which require you to press M and then X (irregardless on key release or modifier key pressed) while holding CTRL
+This can be used to create shotcuts like "CTRL + M, CTRL + X" which require you to press M and then X while holding CTRL (irregardless on key release or modifier key pressed)
 
-I also implemented a similar behaviour to Adobe Premiere Pro's Panel focus (and probably many other programs, but adobe seems like the only one that outlines the panel), where clicking different panels will focus them, changing which key bindings do what. A "Panel" is defined with a path, which in this app is an attached property (found in `UIFocusGroup`, as `FocusGroupPathProperty`).
+I also implemented a similar behaviour to Adobe Premiere Pro's Panel focus (and probably many other programs, but adobe seems like the only one that outlines the panel), where clicking different panels will focus them, changing which key bindings can be activated. A "Panel" is defined with a path, which in this app is an attached property (found in `UIFocusGroup`, as `FocusGroupPathProperty`).
 
 Shortcuts and groups are defined as paths, like a file system; You have folders (shortcut groups) and the files (shortcuts)
 
