@@ -8,6 +8,9 @@ I tried to give this similar behaviour to Adobe Premiere Pro, where clicking dif
 
 This is kinda based around a file system, where you have folders (shortcut groups) and the files (shortcuts)
 
+Also I added a bunch of unnessary libraries to the Core project (IoC, the Services folder (IDispatcher, etc), View/Dialog classes, etc) because 
+I plan on using them to create the shortcut editor dialogs
+
 # Preview
 At the bottom is the status indicator (i was lazy so I just created a static MainWindow reference to access the text block). The shortcuts switch the toggle state of the check boxes (all done through multiple ICommands and bool properties, in MainViewModel)
 ![](FocusGroupHotkeys_2023-03-29_19.43.17.png)
