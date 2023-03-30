@@ -13,17 +13,21 @@ namespace FocusGroupHotkeys.Core.Shortcuts.ViewModels {
 
         public ShortcutManagerViewModel Manager { get; set; }
 
-        private ShortcutGroupViewModel parent;
-        public ShortcutGroupViewModel Parent {
-            get => this.parent;
-            set => this.RaisePropertyChanged(ref this.parent, value);
-        }
+        public ShortcutGroupViewModel Parent { get; }
 
         public ObservableCollection<InputStrokeViewModel> InputStrokes { get; }
 
         public string Name { get; }
 
+        public string Path { get; }
+
         public string Description { get; }
+
+        private bool isGlobal;
+        public bool IsGlobal {
+            get => this.isGlobal;
+            set => this.RaisePropertyChanged(ref this.isGlobal, value);
+        }
 
         public ICommand AddKeyStrokeCommand { get; set; }
 
@@ -44,13 +48,20 @@ namespace FocusGroupHotkeys.Core.Shortcuts.ViewModels {
             }
         }
 
-        public ShortcutViewModel(string name, string description) {
-            this.Name = name;
-            this.Description = description;
+        public ShortcutViewModel(ShortcutGroupViewModel parent, ManagedShortcut reference) {
+            this.ShortcutRefernce = reference;
+            this.Parent = parent;
+            this.Name = reference.Name;
+            this.Path = reference.Path;
+            this.Description = reference.Description;
+            this.isGlobal = reference.IsGlobal;
             this.InputStrokes = new ObservableCollection<InputStrokeViewModel>();
             this.AddKeyStrokeCommand = new RelayCommand(this.AddKeyStrokeAction);
             this.AddMouseStrokeCommand = new RelayCommand(this.AddMouseStrokeAction);
             this.RemoveStrokeCommand = new RelayCommandParam<InputStrokeViewModel>(this.RemoveStrokeAction);
+            foreach (IInputStroke stroke in reference.Shortcut.InputStrokes) {
+                this.InputStrokes.Add(InputStrokeViewModel.CreateFrom(stroke));
+            }
         }
 
         public void AddKeyStrokeAction() {
@@ -70,25 +81,19 @@ namespace FocusGroupHotkeys.Core.Shortcuts.ViewModels {
         }
 
         public void UpdateShortcutReference() {
-            if (this.Manager != null) {
-                IoC.ShortcutManager.RootGroup = this.Manager.SaveToRoot();
-                IoC.BroadcastShortcutUpdate();
+            // if (this.Manager != null) {
+            //     // IoC.ShortcutManager.Root = this.Manager.SaveToRoot();
+            // }
+
+            if (this.ShortcutRefernce != null) {
+                this.ShortcutRefernce.SetShortcut(this.SaveToRealShortcut() ?? KeyboardShortcut.EmptyKeyboardShortcut);
+                IoC.OnShortcutManagedChanged?.Invoke(this.Path);
             }
         }
 
         public void RemoveStrokeAction(InputStrokeViewModel stroke) {
             this.InputStrokes.Remove(stroke);
             this.UpdateShortcutReference();
-        }
-
-        public ShortcutViewModel(string name, string description, IShortcut shortcut) : this(name, description) {
-            foreach (IInputStroke stroke in shortcut.InputStrokes) {
-                this.InputStrokes.Add(InputStrokeViewModel.CreateFrom(stroke));
-            }
-        }
-
-        public ShortcutViewModel(ManagedShortcut managedShortcut) : this(managedShortcut.Name, managedShortcut.Description, managedShortcut.Shortcut) {
-            this.ShortcutRefernce = managedShortcut;
         }
 
         public IShortcut SaveToRealShortcut() {

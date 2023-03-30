@@ -9,6 +9,8 @@ using FocusGroupHotkeys.Core.Shortcuts.ViewModels;
 
 namespace FocusGroupHotkeys.Core.Shortcuts {
     public class MouseShortcut : IMouseShortcut {
+        public static MouseShortcut EmptyMouseShortcut = new MouseShortcut();
+
         private readonly List<MouseStroke> mouseStrokes;
 
         public IInputStroke PrimaryStroke => this.mouseStrokes[0];

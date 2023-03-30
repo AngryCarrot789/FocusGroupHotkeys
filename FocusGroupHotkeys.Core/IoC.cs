@@ -50,10 +50,6 @@ namespace FocusGroupHotkeys.Core {
             set => Instance.Register(value ?? throw new ArgumentNullException(nameof(value), "Value cannot be null"));
         }
 
-        public static Action OnShortcutManagedChanged { get; set; }
-
-        public static void BroadcastShortcutUpdate() {
-            OnShortcutManagedChanged?.Invoke();
-        }
+        public static Action<string> OnShortcutManagedChanged { get; set; }
     }
 }

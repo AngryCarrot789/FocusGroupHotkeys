@@ -1,4 +1,4 @@
-﻿<Window x:Class="FocusGroupHotkeys.MainView.MainWindow"
+﻿<v:WindowEx x:Class="FocusGroupHotkeys.MainView.MainWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
@@ -9,16 +9,18 @@
         xmlns:viewModels="clr-namespace:FocusGroupHotkeys.Core.Shortcuts.ViewModels;assembly=FocusGroupHotkeys.Core"
         xmlns:converters="clr-namespace:FocusGroupHotkeys.Converters"
         xmlns:acs="clr-namespace:FocusGroupHotkeys.AdvancedContextService"
+        xmlns:v="clr-namespace:FocusGroupHotkeys.Views"
         mc:Ignorable="d"
         Title="Click a group box to focus it (red outline)" Height="550" Width="720"
         local:UIFocusGroup.IsGlobalShortcutFocusTarget="True"
         d:DataContext="{d:DesignInstance mainView:MainViewModel}" 
-        Style="{DynamicResource CustomWindowStyle}"
-        BorderBrush="{DynamicResource AREghZyBrush.Primary.3.Border.Static}">
+        Style="{DynamicResource CustomWindowStyleEx}"
+        BorderBrush="DodgerBlue"
+        Background="{DynamicResource AREghZyBrush.Deep.2.Border.Static}">
     <Window.Resources>
         <converters:ShortcutPathToInputGestureTextConverter x:Key="ShortcutTextConverter"/>
     </Window.Resources>
-    <TabControl Margin="-1,0,-1,-1" BorderBrush="{DynamicResource AREghZyBrush.Primary.3.Border.Static}">
+    <TabControl Margin="-1,0,-1,-1" BorderBrush="DodgerBlue">
         <TabItem Header="Checkbox demo">
             <Grid>
                 <TextBox VerticalAlignment="Bottom" Height="25" Padding="3,0" Text="..." x:Name="ACTIVITY_BAR"/>
@@ -53,7 +55,7 @@
                                 <RowDefinition Height="4*"/>
                                 <RowDefinition Height="3*"/>
                             </Grid.RowDefinitions>
-                            <GroupBox BorderThickness="1" Background="Transparent" local:UIFocusGroup.FocusGroupPath="Panel1/Inner1" Header="Inner Panel 1 (global shortcut; no focus)" Grid.ColumnSpan="2"  Style="{DynamicResource FocusableGroupBoxStyle}">
+                            <GroupBox BorderThickness="1" Background="Transparent" local:UIFocusGroup.FocusGroupPath="Panel1/Inner1" Header="Inner Panel 1 (global panel; no focus)" Grid.ColumnSpan="2"  Style="{DynamicResource FocusableGroupBoxStyle}">
                                 <GroupBox.InputBindings>
                                     <bindings:ShortcutBinding ShortcutAndUsageId="Panel1/Inner1/Action1" Command="{Binding P1Action1}"/>
                                 </GroupBox.InputBindings>
@@ -80,7 +82,7 @@
                             </CheckBox>
                         </Grid>
                     </GroupBox>
-                    <GroupBox BorderThickness="1" Background="Transparent" local:UIFocusGroup.FocusGroupPath="Panel2" Header="Panel 2" Grid.Column="2" Style="{DynamicResource FocusableGroupBoxStyle}">
+                    <GroupBox BorderThickness="1" Background="Transparent" local:UIFocusGroup.FocusGroupPath="Panel2" Header="Panel 2 (global shortcut only)" Grid.Column="2" Style="{DynamicResource FocusableGroupBoxStyle}">
                         <GroupBox.InputBindings>
                             <bindings:ShortcutBinding ShortcutAndUsageId="Panel2/Action1" Command="{Binding P2Action1}"/>
                         </GroupBox.InputBindings>
@@ -127,10 +129,79 @@
                     <converters:MouseStrokeRepresentationConverter x:Key="MouseStrokeRepresentationConverter"/>
                 </Grid.Resources>
                 <TreeView DataContext="{Binding ShortcutManager.Root, UpdateSourceTrigger=PropertyChanged}" ItemsSource="{Binding Children}" HorizontalContentAlignment="Stretch" ScrollViewer.CanContentScroll="False" BorderThickness="0">
+                    <TreeView.ItemContainerStyle>
+                        <Style TargetType="{x:Type TreeViewItem}" BasedOn="{StaticResource {x:Type TreeViewItem}}">
+                            <Setter Property="Template">
+                                <Setter.Value>
+                                    <ControlTemplate TargetType="{x:Type TreeViewItem}">
+                                        <Grid>
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition MinWidth="19" Width="Auto"/>
+                                                <ColumnDefinition Width="*"/>
+                                            </Grid.ColumnDefinitions>
+                                            <Grid.RowDefinitions>
+                                                <RowDefinition Height="Auto"/>
+                                                <RowDefinition/>
+                                            </Grid.RowDefinitions>
+                                            <ToggleButton x:Name="Expander" ClickMode="Press"
+                                                          IsChecked="{Binding IsExpanded, RelativeSource={RelativeSource TemplatedParent}}"
+                                                          Style="{StaticResource ExpandCollapseToggleStyle}"/>
+                                            <Border x:Name="Bd" BorderBrush="{TemplateBinding BorderBrush}"
+                                                    BorderThickness="{TemplateBinding BorderThickness}"
+                                                    Background="{TemplateBinding Background}" Grid.Column="1"
+                                                    Padding="{TemplateBinding Padding}" SnapsToDevicePixels="true"
+                                                    HorizontalAlignment="Stretch">
+                                                <ContentPresenter x:Name="PART_Header" ContentSource="Header"
+                                                                  HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}"
+                                                                  SnapsToDevicePixels="{TemplateBinding SnapsToDevicePixels}"/>
+                                            </Border>
+                                            <ItemsPresenter x:Name="ItemsHost" Grid.ColumnSpan="1" Grid.Column="1" Grid.Row="1"/>
+                                        </Grid>
+                                        <ControlTemplate.Triggers>
+                                            <Trigger Property="IsExpanded" Value="false">
+                                                <Setter Property="Visibility" TargetName="ItemsHost" Value="Collapsed"/>
+                                            </Trigger>
+                                            <Trigger Property="HasItems" Value="false">
+                                                <Setter Property="Visibility" TargetName="Expander" Value="Hidden"/>
+                                            </Trigger>
+                                            <Trigger Property="IsSelected" Value="true">
+                                                <Setter Property="Background" TargetName="Bd" Value="{StaticResource TreeViewItem.Selected.Background}"/>
+                                                <Setter Property="BorderBrush" TargetName="Bd" Value="{StaticResource TreeViewItem.Selected.Border}"/>
+                                                <Setter Property="Foreground" Value="{DynamicResource AREghZyBrush.Foreground.Deeper}"/>
+                                            </Trigger>
+                                            <MultiTrigger>
+                                                <MultiTrigger.Conditions>
+                                                    <Condition Property="IsSelected" Value="true"/>
+                                                    <Condition Property="IsSelectionActive" Value="false"/>
+                                                </MultiTrigger.Conditions>
+                                                <Setter Property="Background" TargetName="Bd" Value="{StaticResource TreeViewItem.Selected.Inactive.Background}"/>
+                                                <Setter Property="BorderBrush" TargetName="Bd" Value="{StaticResource TreeViewItem.Selected.Inactive.Border}"/>
+                                                <Setter Property="Foreground" Value="{DynamicResource AREghZyBrush.Foreground.Disabled}"/>
+                                            </MultiTrigger>
+                                            <Trigger Property="IsEnabled" Value="false">
+                                                <Setter Property="Foreground" Value="{DynamicResource AREghZyBrush.Foreground.Disabled}"/>
+                                            </Trigger>
+                                        </ControlTemplate.Triggers>
+                                    </ControlTemplate>
+                                </Setter.Value>
+                            </Setter>
+                            <Style.Triggers>
+                                <Trigger Property="VirtualizingPanel.IsVirtualizing" Value="true">
+                                    <Setter Property="ItemsPanel">
+                                        <Setter.Value>
+                                            <ItemsPanelTemplate>
+                                                <VirtualizingStackPanel/>
+                                            </ItemsPanelTemplate>
+                                        </Setter.Value>
+                                    </Setter>
+                                </Trigger>
+                            </Style.Triggers>
+                        </Style>
+                    </TreeView.ItemContainerStyle>
                     <TreeView.Resources>
                         <HierarchicalDataTemplate DataType="{x:Type viewModels:ShortcutGroupViewModel}" ItemsSource="{Binding Children}">
                             <Grid>
-                                <TextBlock Text="{Binding FocusGroupName}" Padding="1" Margin="1"/>
+                                <TextBlock Text="{Binding FocusGroupName}" ToolTip="{Binding}" Padding="1" Margin="1"/>
                             </Grid>
                         </HierarchicalDataTemplate>
                         <DataTemplate DataType="{x:Type viewModels:ShortcutViewModel}">
@@ -179,4 +250,4 @@
             </Grid>
         </TabItem>
     </TabControl>
-</Window>
+</v:WindowEx>

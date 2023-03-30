@@ -140,12 +140,6 @@ namespace FocusGroupHotkeys {
             }
         }
 
-        // Handling mouse up makes the shortcuts way harder to manage, because there's so many edge cases to consider
-        // e.g how do you handle double/triple/etc click while ignoring mouse down/up if the next usage expects a mouse up/down,
-        // while also checking checking all of the active usages. Just too much extra work... might try and re-implement it some day
-        // 
-        // It works with keys, because they can only be "clicked" once, unlike mouse input, which can have multiple clicks. Also
-        // thought about implementing a key stroke click count... but operating systems don't typically do that so i'd have to implement it myself :(
         private static void OnWindowMouseUp(object sender, MouseButtonEventArgs e) {
             // if (e.OriginalSource is DependencyObject hit) {
             //     string focusedPath = UIFocusGroup.ProcessFocusGroupChange(hit);

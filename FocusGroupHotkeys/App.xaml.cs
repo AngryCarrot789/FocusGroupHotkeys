@@ -26,11 +26,14 @@ namespace FocusGroupHotkeys {
             }
 
             foreach (ManagedShortcut shortcut in group.Shortcuts) {
-                string path = shortcut.Path;
-                string resourcePath = "ShortcutPaths." + path;
-                if (dictionary.Contains(resourcePath)) {
-                    dictionary[resourcePath] = ShortcutPathToInputGestureTextConverter.ShortcutToInputGestureText(path);
-                }
+                UpdatePath(dictionary, shortcut.Path);
+            }
+        }
+
+        private static void UpdatePath(ResourceDictionary dictionary, string shortcut) {
+            string resourcePath = "ShortcutPaths." + shortcut;
+            if (dictionary.Contains(resourcePath)) {
+                dictionary[resourcePath] = ShortcutPathToInputGestureTextConverter.ShortcutToInputGestureText(shortcut);
             }
         }
 
@@ -44,29 +47,36 @@ namespace FocusGroupHotkeys {
             IoC.KeyboardDialogs = new KeyboardDialogService();
             IoC.MouseDialogs = new MouseDialogService();
             IoC.ShortcutManager = AppShortcutManager.Instance;
-            IoC.OnShortcutManagedChanged = () => {
-                UpdateShortcutResourcesRecursive(this.Resources, IoC.ShortcutManager.RootGroup);
+            IoC.OnShortcutManagedChanged = (x) => {
+                if (!string.IsNullOrWhiteSpace(x)) {
+                    UpdatePath(this.Resources, x);
+                }
             };
 
             string path = @"F:\VSProjsV2\FocusGroupHotkeys\FocusGroupHotkeys\SomeXML.xml";
 
-            try {
-                AppShortcutManager.Instance.RootGroup = null;
-                using (Stream stream = File.OpenRead(path)) {
-                    ShortcutGroup result = WPFKeyMapDeserialiser.Instance.Deserialise(stream);
-                    AppShortcutManager.Instance.RootGroup = result;
-                }
+            AppShortcutManager.Instance.Root = null;
+            using (Stream stream = File.OpenRead(path)) {
+                ShortcutGroup result = WPFKeyMapDeserialiser.Instance.Deserialise(stream);
+                AppShortcutManager.Instance.Root = result;
             }
-            catch (Exception ex) {
-                MessageBox.Show(ex.ToString(), "Failed to read config or no such file");
-            }
+
+            // try {
+            //     AppShortcutManager.Instance.Root = null;
+            //     using (Stream stream = File.OpenRead(path)) {
+            //         ShortcutGroup result = WPFKeyMapDeserialiser.Instance.Deserialise(stream);
+            //         AppShortcutManager.Instance.Root = result;
+            //     }
+            // }
+            // catch (Exception ex) {
+            //     MessageBox.Show(ex.ToString(), "Failed to read config or no such file");
+            // }
 
             // CommandManager.RegisterClassCommandBinding(typeof(ShortcutBinding), new CommandBinding());
 
             this.MainWindow = new MainWindow();
             this.MainWindow.Show();
-
-            IoC.BroadcastShortcutUpdate();
+            UpdateShortcutResourcesRecursive(this.Resources, IoC.ShortcutManager.Root);
         }
 
         private class DispatcherDelegate : IDispatcher {

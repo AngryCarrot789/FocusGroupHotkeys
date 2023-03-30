@@ -80,6 +80,7 @@
       <DependentUpon>MouseStrokeInputWindow.xaml</DependentUpon>
     </Compile>
     <Compile Include="Themes\Attached\CornerHelper.cs" />
+    <Compile Include="Themes\Attached\MenuHelper.cs" />
     <Compile Include="Themes\Attached\PasswordBoxHelper.cs" />
     <Compile Include="Themes\Attached\TextBoxAutoSelect.cs" />
     <Compile Include="Themes\Attached\TextHinting.cs" />
@@ -101,6 +102,7 @@
       <DependentUpon>SingleUserInputWindow.xaml</DependentUpon>
     </Compile>
     <Compile Include="Views\Dialogs\UserInputs\UserInputDialogService.cs" />
+    <Compile Include="Views\WindowEx.cs" />
     <Compile Include="VisualTreeUtils.cs" />
     <Compile Include="WPFKeyMapDeserialiser.cs" />
     <Compile Include="App.xaml.cs">

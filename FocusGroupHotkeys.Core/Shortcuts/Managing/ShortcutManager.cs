@@ -1,13 +1,11 @@
 using System.Collections.Generic;
 using System.Linq;
 using FocusGroupHotkeys.Core.Inputs;
-using FocusGroupHotkeys.Core.Shortcuts.Serialization;
 using FocusGroupHotkeys.Core.Shortcuts.Usage;
-using FocusGroupHotkeys.Core.Shortcuts.ViewModels;
 
 namespace FocusGroupHotkeys.Core.Shortcuts.Managing {
     public class ShortcutManager {
-        public ShortcutGroup RootGroup { get; set; }
+        public ShortcutGroup Root { get; set; }
 
         public Dictionary<IShortcutUsage, ManagedShortcut> ActiveUsages { get; }
 
@@ -15,22 +13,22 @@ namespace FocusGroupHotkeys.Core.Shortcuts.Managing {
         private readonly List<ManagedShortcut> tempShortcutList;
 
         public ShortcutManager() {
-            this.RootGroup = ShortcutGroup.CreateRoot(true);
+            this.Root = ShortcutGroup.CreateRoot();
             this.ActiveUsages = new Dictionary<IShortcutUsage, ManagedShortcut>();
             this.tempShortcutList = new List<ManagedShortcut>(16);
         }
 
         public ShortcutGroup FindGroupByPath(string path) {
-            return this.RootGroup.GetGroupByPath(path);
+            return this.Root.GetGroupByPath(path);
         }
 
         public ManagedShortcut FindShortcutByPath(string path) {
-            return this.RootGroup.GetShortcutByPath(path);
+            return this.Root.GetShortcutByPath(path);
         }
 
         public bool OnKeyStroke(string focusedGroup, in KeyStroke stroke) {
             if (this.ActiveUsages.Count < 1) {
-                this.RootGroup.CollectShortcutsWithPrimaryStroke(stroke, focusedGroup, this.tempShortcutList);
+                this.Root.CollectShortcutsWithPrimaryStroke(stroke, focusedGroup, this.tempShortcutList);
                 if (this.tempShortcutList.Count < 1) {
                     return this.OnNoSuchShortcutForKeyStroke(stroke);
                 }
@@ -43,8 +41,9 @@ namespace FocusGroupHotkeys.Core.Shortcuts.Managing {
 
                 // All shortcuts here have secondary input strokes, because the code above
                 // will attempt to execute the first shortcut that has no second input strokes.
-                // In most cases, the list should ever return 1 item with no secondary inputs, or a list full
-                // of shortcuts that all have secondary inputs (because logically, that's how a key map should work)
+                // In most cases, the list should only ever have 1 item with no secondary inputs, or be full of
+                // shortcuts that all have secondary inputs (because logically, that's how a key map should work...
+                // why would you want multiple shortcuts to activate on the same key stroke?)
                 foreach (ManagedShortcut mc in this.tempShortcutList) {
                     if (mc.Shortcut is IKeyboardShortcut shortcut) {
                         IKeyboardShortcutUsage usage = shortcut.CreateKeyUsage();
@@ -130,7 +129,7 @@ namespace FocusGroupHotkeys.Core.Shortcuts.Managing {
 
         public bool OnMouseStroke(string focusedGroup, in MouseStroke stroke) {
             if (this.ActiveUsages.Count < 1) {
-                this.RootGroup.CollectShortcutsWithPrimaryStroke(stroke, focusedGroup, this.tempShortcutList);
+                this.Root.CollectShortcutsWithPrimaryStroke(stroke, focusedGroup, this.tempShortcutList);
                 if (this.tempShortcutList.Count < 1) {
                     return this.OnNoSuchShortcutForMouseStroke(stroke);
                 }
@@ -140,10 +139,6 @@ namespace FocusGroupHotkeys.Core.Shortcuts.Managing {
                     return this.OnShortcutActivated(instantActivate);
                 }
 
-                // All shortcuts here have secondary input strokes, because the code above
-                // will attempt to execute the first shortcut that has no second input strokes.
-                // In most cases, the list should ever return 1 item with no secondary inputs, or a list full
-                // of shortcuts that all have secondary inputs (because logically, that's how a key map should work)
                 foreach (ManagedShortcut mc in this.tempShortcutList) {
                     if (mc.Shortcut is IMouseShortcut shortcut) {
                         IMouseShortcutUsage usage = shortcut.CreateMouseUsage();
@@ -174,7 +169,15 @@ namespace FocusGroupHotkeys.Core.Shortcuts.Managing {
                         if (usage.IsCurrentStrokeMouseBased) {
                             strokeAccepted = usage.OnMouseStroke(stroke);
                         }
-                        // TODO: Maybe try to implement something here that allows mouse button release to be processed?
+                        // Maybe try to implement something here that allows mouse button release to be processed?
+                        // Handling mouse up makes the shortcuts way harder to manage, because there's so many edge
+                        // cases to consider, e.g. how do you handle double/triple/etc click while ignoring mouse down/up
+                        // if the next usage expects a mouse up/down, while also checking checking all of the active usages.
+                        // Just too much extra work... might try and re-implement it some day
+                        //
+                        // It works with keys, because they can only be "clicked" once, unlike mouse input, which can have
+                        // multiple clicks. Also thought about implementing a key stroke click count... but operating systems
+                        // don't typically do that so i'd have to implement it myself :(
                         else {
                             strokeAccepted = false;
                         }

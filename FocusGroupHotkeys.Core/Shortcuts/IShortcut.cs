@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using FocusGroupHotkeys.Core.Inputs;
 using FocusGroupHotkeys.Core.Shortcuts.Usage;
@@ -25,6 +26,9 @@ namespace FocusGroupHotkeys.Core.Shortcuts {
         /// <summary>
         /// Whether this shortcut has secondary input strokes or not. When it does, it requires
         /// a "Usage" implementation, in order to track the progression of key strokes
+        /// <para>
+        /// This is typically implemented by checking if <see cref="InputStrokes"/> yields more than 1 item
+        /// </para>
         /// </summary>
         bool HasSecondaryStrokes { get; }
 

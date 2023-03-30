@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Collections.Specialized;
 using System.IO;
 using System.Linq;
 using System.Xml;
@@ -39,9 +40,9 @@ namespace FocusGroupHotkeys.Core.Shortcuts.Serialization {
             }
         }
 
-        public virtual void Serialise(Stream output, ShortcutGroup @group) {
+        public virtual void Serialise(Stream output, ShortcutGroup group) {
             KeyMap map = new KeyMap();
-            this.SerialiseGroup(map, @group);
+            this.SerialiseGroup(map, group);
             Serializer.Serialize(new XmlTextWriter(output, null) {
                 Formatting = Formatting.Indented,
                 Indentation = 4,
@@ -61,13 +62,12 @@ namespace FocusGroupHotkeys.Core.Shortcuts.Serialization {
         public virtual ShortcutGroup Deserialise(Stream input) {
             KeyMap result = (KeyMap) Serializer.Deserialize(input);
             if (result == null) {
-                throw new Exception("Failed to decompile key map; null returned");
+                throw new Exception("Failed to deserialize key map; null returned");
             }
 
-            ShortcutGroup tempParent = new ShortcutGroup(null, false, false);
-            ShortcutGroup group = this.DeserialiseGroup(result, tempParent);
-            group.Parent = null;
-            return group;
+            ShortcutGroup root = ShortcutGroup.CreateRoot();
+            this.DeserialiseGroupData(result, root);
+            return root;
         }
 
         protected virtual IEnumerable<IInputStroke> DeserialiseStrokes(List<object> strokes) {
@@ -84,12 +84,7 @@ namespace FocusGroupHotkeys.Core.Shortcuts.Serialization {
             }
         }
 
-        protected virtual ShortcutGroup DeserialiseGroup(Group keyGroup, ShortcutGroup parent) {
-            // if (string.IsNullOrWhiteSpace(group.Name) && group.IsGlobal != "true") {
-            //     throw new Exception("Non-global group has a null or empty name");
-            // }
-
-            ShortcutGroup focusGroup = parent.CreateGroupByName(keyGroup.Name, keyGroup.IsGlobalBool, keyGroup.InheritFromParent == "true");
+        protected virtual void DeserialiseGroupData(Group keyGroup, ShortcutGroup realKeyGroup) {
             if (keyGroup.Shortcuts != null && keyGroup.Shortcuts.Count > 0) {
                 foreach (Shortcut cut in keyGroup.Shortcuts) {
                     bool hasKey = false;
@@ -118,7 +113,7 @@ namespace FocusGroupHotkeys.Core.Shortcuts.Serialization {
                         continue;
                     }
 
-                    ManagedShortcut managed = focusGroup.AddShortcut(cut.Name, shortcut);
+                    ManagedShortcut managed = realKeyGroup.AddShortcut(cut.Name, shortcut, cut.IsGlobalBool);
                     managed.ActionID = cut.ActionID;
                     managed.Description = cut.Description;
                 }
@@ -126,27 +121,33 @@ namespace FocusGroupHotkeys.Core.Shortcuts.Serialization {
 
             if (keyGroup.InnerGroups != null && keyGroup.InnerGroups.Count > 0) {
                 foreach (Group innerGroup in keyGroup.InnerGroups) {
-                    this.DeserialiseGroup(innerGroup, focusGroup);
+                    ShortcutGroup realInnerGroup = realKeyGroup.CreateGroupByName(innerGroup.Name, innerGroup.IsGlobalBool, innerGroup.InheritBool);
+                    realInnerGroup.Description = innerGroup.Description;
+                    this.DeserialiseGroupData(innerGroup, realInnerGroup);
                 }
             }
-
-            return focusGroup;
         }
 
         protected virtual void SerialiseGroup(Group group, ShortcutGroup focusGroup) {
             group.Name = focusGroup.FocusGroupName;
-            group.IsGlobal = SerialiseObject(focusGroup.IsGlobal);
-            group.InheritFromParent = SerialiseObject(focusGroup.InheritFromParent);
+            group.Description = string.IsNullOrWhiteSpace(focusGroup.Description) ? null : focusGroup.Description;
+            group.IsGlobal = SerialiseObject(focusGroup.IsGlobal, false);
+            group.InheritFromParent = SerialiseObject(focusGroup.InheritFromParent, false);
             group.InnerGroups = new List<Group>();
             group.Shortcuts = new List<Shortcut>();
             foreach (ManagedShortcut shortcut in focusGroup.Shortcuts) {
+                if (shortcut.Shortcut.IsEmpty) {
+                    continue;
+                }
+
                 Shortcut cut = new Shortcut {
                     Name = shortcut.Name,
                     Description = shortcut.Description,
-                    ActionID = shortcut.ActionID
+                    ActionID = shortcut.ActionID,
+                    IsGlobal = SerialiseObject(shortcut.IsGlobal, false),
+                    Strokes = new List<object>()
                 };
 
-                cut.Strokes = new List<object>();
                 foreach (IInputStroke stroke in shortcut.Shortcut.InputStrokes) {
                     this.SerialiseInputStrokeToShortcut(cut, stroke);
                 }
@@ -161,8 +162,8 @@ namespace FocusGroupHotkeys.Core.Shortcuts.Serialization {
             }
         }
 
-        private static string SerialiseObject(bool value) {
-            return value ? "true" : "false";
+        private static string SerialiseObject(bool value, bool def) {
+            return value == def ? null : (value ? "true" : "false");
         }
     }
 }

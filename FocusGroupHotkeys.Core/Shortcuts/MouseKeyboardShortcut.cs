@@ -8,6 +8,8 @@ using FocusGroupHotkeys.Core.Shortcuts.ViewModels;
 
 namespace FocusGroupHotkeys.Core.Shortcuts {
     public class MouseKeyboardShortcut : IMouseShortcut, IKeyboardShortcut {
+        public static MouseShortcut EmptyMouseKeyboardShortcut = new MouseShortcut();
+
         private readonly List<IInputStroke> inputStrokes;
 
         public MouseStroke PrimaryMouseStroke => this.PrimaryStroke is MouseStroke stroke ? stroke : throw new Exception("Primary stroke is not a mouse stroke");

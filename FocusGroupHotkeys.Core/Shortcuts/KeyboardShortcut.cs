@@ -13,6 +13,8 @@ namespace FocusGroupHotkeys.Core.Shortcuts {
     /// </para>
     /// </summary>
     public class KeyboardShortcut : IKeyboardShortcut {
+        public static KeyboardShortcut EmptyKeyboardShortcut = new KeyboardShortcut();
+
         private readonly List<KeyStroke> keyStrokes;
 
         public IInputStroke PrimaryStroke => this.keyStrokes[0];

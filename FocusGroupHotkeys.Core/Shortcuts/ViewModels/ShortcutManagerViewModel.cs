@@ -13,7 +13,7 @@ namespace FocusGroupHotkeys.Core.Shortcuts.ViewModels {
         }
 
         public void LoadFromRoot(ShortcutGroup group) {
-            this.Root = ShortcutGroupViewModel.CreateFrom(group, this);
+            this.Root = ShortcutGroupViewModel.CreateFrom(this, null, group);
         }
 
         public ShortcutGroup SaveToRoot() {

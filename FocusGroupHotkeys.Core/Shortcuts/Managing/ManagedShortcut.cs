@@ -15,7 +15,7 @@ namespace FocusGroupHotkeys.Core.Shortcuts.Managing {
         /// <summary>
         /// The shortcut itself
         /// </summary>
-        public IShortcut Shortcut { get; }
+        public IShortcut Shortcut { get; private set; }
 
         /// <summary>
         /// The name of the shortcut
@@ -28,16 +28,31 @@ namespace FocusGroupHotkeys.Core.Shortcuts.Managing {
         public string Description { get; set; }
 
         /// <summary>
+        /// Whether this shortcut can run globally (across the entire window). When false, the parent group must be focused in order for this to be fun
+        /// </summary>
+        public bool IsGlobal { get; set; }
+
+        /// <summary>
         /// The ID for an optional action that this shortcut will trigger when activated
         /// </summary>
         public string ActionID { get; set; }
 
-        public string Path => this.Group.GetPathForName(this.Name);
+        public string Path { get; }
 
-        public ManagedShortcut(ShortcutGroup collection, string name, IShortcut shortcut) {
+        public ManagedShortcut(ShortcutGroup collection, string name, IShortcut shortcut, bool isGlobal = false) {
             this.Group = collection ?? throw new ArgumentNullException(nameof(collection), "Collection cannot be null");
             this.Shortcut = shortcut ?? throw new ArgumentNullException(nameof(shortcut), "Shortcut cannot be null");
+            this.Path = collection.GetPathForName(name);
             this.Name = name;
+            this.IsGlobal = isGlobal;
+        }
+
+        public void SetShortcut(IShortcut shortcut) {
+            if (shortcut == null) {
+                throw new ArgumentNullException(nameof(shortcut), "Shortcut cannot be null");
+            }
+
+            this.Shortcut = shortcut;
         }
 
         public override string ToString() {

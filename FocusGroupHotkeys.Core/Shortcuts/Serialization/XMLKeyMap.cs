@@ -9,6 +9,7 @@ namespace FocusGroupHotkeys.Core.Shortcuts.Serialization {
 
     public class Group {
         [XmlAttribute("Name")] public string Name { get; set; }
+        [XmlAttribute("Description")] public string Description { get; set; }
         [XmlAttribute("IsGlobal")] public string IsGlobal { get; set; }
         [XmlAttribute("InheritPath")] public string InheritFromParent { get; set; }
         [XmlElement("Group")] public List<Group> InnerGroups { get; set; }
@@ -16,16 +17,23 @@ namespace FocusGroupHotkeys.Core.Shortcuts.Serialization {
 
         [XmlIgnore]
         public bool IsGlobalBool => !string.IsNullOrWhiteSpace(this.IsGlobal) && this.IsGlobal.ToLower().Equals("true");
+
+        [XmlIgnore]
+        public bool InheritBool => !string.IsNullOrWhiteSpace(this.InheritFromParent) && this.InheritFromParent.ToLower().Equals("true");
     }
 
     public class Shortcut {
         [XmlAttribute("Name")] public string Name { get; set; }
         [XmlAttribute("Description")] public string Description { get; set; }
         [XmlAttribute("ActionID")] public string ActionID { get; set; }
+        [XmlAttribute("IsGlobal")] public string IsGlobal { get; set; }
 
         [XmlElement("Keystroke", Type = typeof(Keystroke))]
         [XmlElement("Mousestroke", Type = typeof(Mousestroke))]
         public List<object> Strokes { get; set; }
+
+        [XmlIgnore]
+        public bool IsGlobalBool => !string.IsNullOrWhiteSpace(this.IsGlobal) && this.IsGlobal.ToLower().Equals("true");
     }
 
     public class Keystroke {

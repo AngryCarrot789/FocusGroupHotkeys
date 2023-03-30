@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
 <KeyMap>
     <Group Name="Panel1">
-        <Group Name="Inner1" IsGlobal="true">
+        <Group Name="Inner1" IsGlobal="true" Description="test global panel">
             <Shortcut Name="Action1">
                 <Keystroke Mods="CTRL+SHIFT" Char="D1"/>
             </Shortcut>
@@ -29,7 +29,7 @@
         </Shortcut>
     </Group>
     <Group Name="Panel2">
-        <Shortcut Name="Action1">
+        <Shortcut Name="Action1" IsGlobal="true">
             <Keystroke Mods="CTRL" Char="D2"/>
         </Shortcut>
     </Group>

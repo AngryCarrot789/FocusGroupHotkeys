@@ -1,4 +1,5 @@
 ﻿using System.Windows;
+using System.Windows.Controls;
 
 namespace FocusGroupHotkeys.Views.Dialogs.UserInputs {
     /// <summary>
@@ -15,6 +16,7 @@ namespace FocusGroupHotkeys.Views.Dialogs.UserInputs {
         private void SingleUserInputWindow_Loaded(object sender, RoutedEventArgs e) {
             this.InputBox.Focus();
             this.InputBox.SelectAll();
+            this.InputBox.GetBindingExpression(TextBox.TextProperty)?.UpdateSource();
         }
     }
 }

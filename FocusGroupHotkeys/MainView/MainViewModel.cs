@@ -51,7 +51,7 @@ namespace FocusGroupHotkeys.MainView {
             this.P5Action1 = new RelayCommand(() => { this.IsP5Action1Checked = !this.IsP5Action1Checked; });
             this.P6Action1 = new RelayCommand(() => { this.IsP6Action1Checked = !this.IsP6Action1Checked; });
             this.ShortcutManager = new ShortcutManagerViewModel();
-            this.ShortcutManager.LoadFromRoot(AppShortcutManager.Instance.RootGroup);
+            this.ShortcutManager.LoadFromRoot(AppShortcutManager.Instance.Root);
         }
     }
 }

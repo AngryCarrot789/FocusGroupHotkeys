@@ -33,7 +33,7 @@ namespace FocusGroupHotkeys.Core.Views.Dialogs {
         /// </para>
         /// </summary>
         public virtual Task<bool> CanConfirm() {
-            if (this.Dialog is IHasErrorInfo errors && errors.Errors.Count > 0) {
+            if (this.Dialog is IHasErrorInfo errors && errors.HasAnyErrors) {
                 // Should a window really be shown? It's probably better just use WPF's
                 // validation templates + adorners and just disable the confirm command
 
