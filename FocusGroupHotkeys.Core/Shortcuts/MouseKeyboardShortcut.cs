@@ -8,98 +8,74 @@ using FocusGroupHotkeys.Core.Shortcuts.ViewModels;
 
 namespace FocusGroupHotkeys.Core.Shortcuts {
     public class MouseKeyboardShortcut : IMouseShortcut, IKeyboardShortcut {
-        private readonly List<IInputStroke> secondStrokes;
+        private readonly List<IInputStroke> inputStrokes;
 
         public MouseStroke PrimaryMouseStroke => this.PrimaryStroke is MouseStroke stroke ? stroke : throw new Exception("Primary stroke is not a mouse stroke");
 
         public KeyStroke PrimaryKeyStroke => this.PrimaryStroke is KeyStroke stroke ? stroke : throw new Exception("Primary stroke is not a key stroke");
 
-        public IEnumerable<MouseStroke> SecondMouseStrokes => this.secondStrokes.OfType<MouseStroke>();
+        public IEnumerable<MouseStroke> MouseStrokes => this.inputStrokes.OfType<MouseStroke>();
 
-        public IEnumerable<KeyStroke> SecondKeyStrokes => this.secondStrokes.OfType<KeyStroke>();
+        public IEnumerable<KeyStroke> KeyStrokes => this.inputStrokes.OfType<KeyStroke>();
 
-        public IInputStroke PrimaryStroke { get; }
+        public IInputStroke PrimaryStroke => this.inputStrokes[0];
 
-        public IEnumerable<IInputStroke> SecondaryStrokes {
-            get => this.secondStrokes;
+        public IEnumerable<IInputStroke> InputStrokes {
+            get => this.inputStrokes;
         }
 
         public bool IsKeyboard => true;
 
         public bool IsMouse => true;
 
-        public bool HasSecondaryStrokes => this.secondStrokes.Count > 0;
+        public bool IsEmpty => this.inputStrokes.Count < 1;
 
-        public MouseKeyboardShortcut(IInputStroke primaryMouseStroke) {
-            this.PrimaryStroke = primaryMouseStroke;
-            this.secondStrokes = new List<IInputStroke>();
+        public bool HasSecondaryStrokes => this.inputStrokes.Count > 1;
+
+        public MouseKeyboardShortcut() {
+            this.inputStrokes = new List<IInputStroke>();
         }
 
-        public MouseKeyboardShortcut(IInputStroke primaryMouseStroke, params IInputStroke[] secondMouseStrokes) {
-            this.PrimaryStroke = primaryMouseStroke;
-            this.secondStrokes = new List<IInputStroke>(secondMouseStrokes);
+        public MouseKeyboardShortcut(params IInputStroke[] secondMouseStrokes) {
+            this.inputStrokes = new List<IInputStroke>(secondMouseStrokes);
         }
 
-        public MouseKeyboardShortcut(IInputStroke primaryMouseStroke, IEnumerable<IInputStroke> secondMouseStrokes) {
-            this.PrimaryStroke = primaryMouseStroke;
-            this.secondStrokes = new List<IInputStroke>(secondMouseStrokes);
+        public MouseKeyboardShortcut(IEnumerable<IInputStroke> secondMouseStrokes) {
+            this.inputStrokes = new List<IInputStroke>(secondMouseStrokes);
         }
 
-        public MouseKeyboardShortcut(IInputStroke primaryMouseStroke, List<IInputStroke> secondStrokes) {
-            this.PrimaryStroke = primaryMouseStroke;
-            this.secondStrokes = secondStrokes;
-        }
-
-        public MouseKeyboardShortcut(IEnumerable<IInputStroke> strokes) {
-            using (IEnumerator<IInputStroke> x = strokes.GetEnumerator()) {
-                if (!x.MoveNext()) {
-                    throw new Exception("IEnumerable did not contain 1 or more elements");
-                }
-
-                this.PrimaryStroke = x.Current;
-                this.secondStrokes = new List<IInputStroke>();
-                while (x.MoveNext()) {
-                    this.secondStrokes.Add(x.Current);
-                }
-            }
+        public MouseKeyboardShortcut(List<IInputStroke> inputStrokes) {
+            this.inputStrokes = inputStrokes;
         }
 
         public IMouseShortcutUsage CreateMouseUsage() {
             return (IMouseShortcutUsage) this.CreateUsage();
         }
 
+
         public IKeyboardShortcutUsage CreateKeyUsage() {
             return (IKeyboardShortcutUsage) this.CreateUsage();
         }
 
         public IShortcutUsage CreateUsage() {
-            return new MouseKeyboardShortcutUsage(this);
+            return this.IsEmpty ? throw new InvalidOperationException("Shortcut is empty. Cannot create a usage") : new MouseKeyboardShortcutUsage(this);
         }
 
         public override string ToString() {
-            StringBuilder sb = new StringBuilder();
-            sb.Append(this.PrimaryStroke);
-            foreach (IInputStroke stroke in this.secondStrokes) {
-                sb.Append(", ").Append(stroke);
-            }
-
-            return sb.ToString();
+            return string.Join(", ", this.inputStrokes);
         }
 
         public override bool Equals(object obj) {
             if (obj is MouseKeyboardShortcut shortcut) {
                 if (this.PrimaryStroke.Equals(shortcut.PrimaryStroke)) {
-                    int lenA = this.secondStrokes.Count;
-                    int lenB = shortcut.secondStrokes.Count;
-                    if (lenA == 0 && lenB == 0) {
-                        return true;
-                    }
-                    else if (lenA != lenB) {
+                    int lenA = this.inputStrokes.Count;
+                    int lenB = shortcut.inputStrokes.Count;
+                    if (lenA != lenB) {
                         return false;
                     }
 
                     for (int i = 0; i < lenA; i++) {
-                        if (!this.secondStrokes[i].Equals(shortcut.secondStrokes[i])) {
+                        if (!this.inputStrokes[i].Equals(shortcut.inputStrokes[i])) {
                             return false;
                         }
                     }
@@ -112,8 +88,8 @@ namespace FocusGroupHotkeys.Core.Shortcuts {
         }
 
         public override int GetHashCode() {
-            int code = this.PrimaryStroke.GetHashCode();
-            foreach (IInputStroke stroke in this.secondStrokes)
+            int code = 0;
+            foreach (IInputStroke stroke in this.inputStrokes)
                 code += stroke.GetHashCode();
             return code;
         }

@@ -8,11 +8,17 @@
         xmlns:mainView="clr-namespace:FocusGroupHotkeys.MainView"
         xmlns:viewModels="clr-namespace:FocusGroupHotkeys.Core.Shortcuts.ViewModels;assembly=FocusGroupHotkeys.Core"
         xmlns:converters="clr-namespace:FocusGroupHotkeys.Converters"
+        xmlns:acs="clr-namespace:FocusGroupHotkeys.AdvancedContextService"
         mc:Ignorable="d"
-        Title="Click a group box to focus it (red outline)" Height="450" Width="700"
+        Title="Click a group box to focus it (red outline)" Height="550" Width="720"
         local:UIFocusGroup.IsGlobalShortcutFocusTarget="True"
-        d:DataContext="{d:DesignInstance mainView:MainViewModel}">
-    <TabControl>
+        d:DataContext="{d:DesignInstance mainView:MainViewModel}" 
+        Style="{DynamicResource CustomWindowStyle}"
+        BorderBrush="{DynamicResource AREghZyBrush.Primary.3.Border.Static}">
+    <Window.Resources>
+        <converters:ShortcutPathToInputGestureTextConverter x:Key="ShortcutTextConverter"/>
+    </Window.Resources>
+    <TabControl Margin="-1,0,-1,-1" BorderBrush="{DynamicResource AREghZyBrush.Primary.3.Border.Static}">
         <TabItem Header="Checkbox demo">
             <Grid>
                 <TextBox VerticalAlignment="Bottom" Height="25" Padding="3,0" Text="..." x:Name="ACTIVITY_BAR"/>
@@ -20,7 +26,7 @@
                     <Grid.RowDefinitions>
                         <RowDefinition Height="25*"/>
                         <RowDefinition Height="5"/>
-                        <RowDefinition Height="15*"/>
+                        <RowDefinition Height="8*"/>
                     </Grid.RowDefinitions>
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="40*"/>
@@ -29,7 +35,7 @@
                         <ColumnDefinition Width="5"/>
                         <ColumnDefinition Width="20*"/>
                     </Grid.ColumnDefinitions>
-                    <GroupBox Background="Transparent" local:UIFocusGroup.FocusGroupPath="Panel1" Header="Panel 1" Style="{DynamicResource FocusableGroupBoxStyle}">
+                    <GroupBox BorderThickness="1" Background="Transparent" local:UIFocusGroup.FocusGroupPath="Panel1" Header="Panel 1" Style="{DynamicResource FocusableGroupBoxStyle}">
                         <GroupBox.InputBindings>
                             <bindings:ShortcutBinding ShortcutAndUsageId="Panel1/Action4" Command="{Binding P1Action4}"/>
                             <bindings:ShortcutBinding ShortcutAndUsageId="Panel1/Action5" Command="{Binding P1Action5}"/>
@@ -40,34 +46,41 @@
                                 <ColumnDefinition Width="*"/>
                             </Grid.ColumnDefinitions>
                             <Grid.RowDefinitions>
-                                <RowDefinition Height="*"/>
-                                <RowDefinition Height="*"/>
-                                <RowDefinition Height="*"/>
-                                <RowDefinition Height="18"/>
+                                <RowDefinition Height="4*"/>
+                                <RowDefinition Height="5"/>
+                                <RowDefinition Height="4*"/>
+                                <RowDefinition Height="5"/>
+                                <RowDefinition Height="4*"/>
+                                <RowDefinition Height="3*"/>
                             </Grid.RowDefinitions>
-                            <GroupBox Background="Transparent" local:UIFocusGroup.FocusGroupPath="Panel1/Inner1" Header="Inner Panel 1 (global shortcut; no focus)" Grid.ColumnSpan="2"  Style="{DynamicResource FocusableGroupBoxStyle}">
+                            <GroupBox BorderThickness="1" Background="Transparent" local:UIFocusGroup.FocusGroupPath="Panel1/Inner1" Header="Inner Panel 1 (global shortcut; no focus)" Grid.ColumnSpan="2"  Style="{DynamicResource FocusableGroupBoxStyle}">
                                 <GroupBox.InputBindings>
                                     <bindings:ShortcutBinding ShortcutAndUsageId="Panel1/Inner1/Action1" Command="{Binding P1Action1}"/>
                                 </GroupBox.InputBindings>
-                                <CheckBox HorizontalAlignment="Center" VerticalAlignment="Center" Content="CTRL + SHIFT + 1" IsChecked="{Binding IsP1Action1Checked, UpdateSourceTrigger=PropertyChanged}"/>
+                                <!-- Content="{Binding (mainView:StaticShortcutHelper.Blank), Converter={StaticResource ShortcutTextConverter}, ConverterParameter='Panel1/Inner1/Action1', FallbackValue='CTRL + SHIFT + 1'}" -->
+                                <CheckBox Content="{DynamicResource ShortcutPaths.Panel1/Inner1/Action1}" HorizontalAlignment="Center" VerticalAlignment="Center" IsChecked="{Binding IsP1Action1Checked, UpdateSourceTrigger=PropertyChanged}"/>
                             </GroupBox>
-                            <GroupBox Background="Transparent" local:UIFocusGroup.FocusGroupPath="Panel1/Inner2"  Header="Inner Panel 2" Grid.Row="1" Grid.ColumnSpan="2"  Style="{DynamicResource FocusableGroupBoxStyle}">
+                            <GroupBox BorderThickness="1" Background="Transparent" local:UIFocusGroup.FocusGroupPath="Panel1/Inner2"  Header="Inner Panel 2" Grid.Row="2" Grid.ColumnSpan="2"  Style="{DynamicResource FocusableGroupBoxStyle}">
                                 <GroupBox.InputBindings>
                                     <bindings:ShortcutBinding ShortcutAndUsageId="Panel1/Inner2/Action2" Command="{Binding P1Action2}"/>
                                 </GroupBox.InputBindings>
-                                <CheckBox HorizontalAlignment="Center" VerticalAlignment="Center" Content="CTRL + SHIFT + 2" IsChecked="{Binding IsP1Action2Checked, UpdateSourceTrigger=PropertyChanged}"/>
+                                <CheckBox HorizontalAlignment="Center" VerticalAlignment="Center" Content="{DynamicResource ShortcutPaths.Panel1/Inner2/Action2}" IsChecked="{Binding IsP1Action2Checked, UpdateSourceTrigger=PropertyChanged}"/>
                             </GroupBox>
-                            <GroupBox Background="Transparent" local:UIFocusGroup.FocusGroupPath="Panel1/Inner3" Header="Inner Panel 3 (global shortcut; no focus)" Grid.Row="2" Margin="0,0,0,-1" Grid.ColumnSpan="2"  Style="{DynamicResource FocusableGroupBoxStyle}">
+                            <GroupBox BorderThickness="1" Background="Transparent" local:UIFocusGroup.FocusGroupPath="Panel1/Inner3" Header="Inner Panel 3 (global shortcut; no focus)" Grid.Row="4" Grid.ColumnSpan="2"  Style="{DynamicResource FocusableGroupBoxStyle}">
                                 <GroupBox.InputBindings>
                                     <bindings:ShortcutBinding ShortcutAndUsageId="Panel1/Inner3/Action3" Command="{Binding P1Action3}"/>
                                 </GroupBox.InputBindings>
-                                <CheckBox HorizontalAlignment="Center" VerticalAlignment="Center" Content="CTRL + SHIFT + 3, CTRL + MouseX1 (x3)" IsChecked="{Binding IsP1Action3Checked, UpdateSourceTrigger=PropertyChanged}" ToolTip="The X1 button is also known as the 'Back' button on your mouse, typically on the side closest to you/the back of the mouse itself. The x3 means you click it 3 times (in a short time. In most operating sytems, the click counter expires after 500ms of the first mouse input)"/>
+                                <CheckBox HorizontalAlignment="Center" VerticalAlignment="Center" Content="{DynamicResource ShortcutPaths.Panel1/Inner3/Action3}" IsChecked="{Binding IsP1Action3Checked, UpdateSourceTrigger=PropertyChanged}" ToolTip="The X1 button is also known as the 'Back' button on your mouse, typically on the side closest to you/the back of the mouse itself. The x3 means you click it 3 times (in a short time. In most operating sytems, the click counter expires after 500ms of the first mouse input)"/>
                             </GroupBox>
-                            <CheckBox HorizontalAlignment="Center" Content="CTRL+M, CTRL+4" Grid.Row="3" Height="15" IsChecked="{Binding IsP1Action4Checked, UpdateSourceTrigger=PropertyChanged}" VerticalAlignment="Bottom"/>
-                            <CheckBox HorizontalAlignment="Center" Content="CTRL+M, CTRL+5" Grid.Row="3" Height="15" IsChecked="{Binding IsP1Action5Checked, UpdateSourceTrigger=PropertyChanged}" VerticalAlignment="Bottom" Grid.Column="1"/>
+                            <CheckBox Grid.Row="5" IsChecked="{Binding IsP1Action4Checked, UpdateSourceTrigger=PropertyChanged}" Margin="0,0,5,-1">
+                                <TextBlock Text="{DynamicResource ShortcutPaths.Panel1/Action4}" TextWrapping="Wrap" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Padding="1" Width="132"/>
+                            </CheckBox>
+                            <CheckBox Grid.Row="5" IsChecked="{Binding IsP1Action5Checked, UpdateSourceTrigger=PropertyChanged}" Grid.Column="1" Margin="0,0,0,-1">
+                                <TextBlock Text="{DynamicResource ShortcutPaths.Panel1/Action5}" TextWrapping="Wrap" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Padding="1" Width="135"/>
+                            </CheckBox>
                         </Grid>
                     </GroupBox>
-                    <GroupBox Background="Transparent" local:UIFocusGroup.FocusGroupPath="Panel2" Header="Panel 2" Grid.Column="2" Style="{DynamicResource FocusableGroupBoxStyle}">
+                    <GroupBox BorderThickness="1" Background="Transparent" local:UIFocusGroup.FocusGroupPath="Panel2" Header="Panel 2" Grid.Column="2" Style="{DynamicResource FocusableGroupBoxStyle}">
                         <GroupBox.InputBindings>
                             <bindings:ShortcutBinding ShortcutAndUsageId="Panel2/Action1" Command="{Binding P2Action1}"/>
                         </GroupBox.InputBindings>
@@ -76,33 +89,33 @@
                                 <RowDefinition Height="*"/>
                                 <RowDefinition Height="*"/>
                             </Grid.RowDefinitions>
-                            <CheckBox Content="CTRL + 2" Height="20" Grid.Row="0" IsChecked="{Binding IsP2Action1Checked, UpdateSourceTrigger=PropertyChanged}"/>
+                            <CheckBox Content="{DynamicResource ShortcutPaths.Panel2/Action1}" Height="20" Grid.Row="0" IsChecked="{Binding IsP2Action1Checked, UpdateSourceTrigger=PropertyChanged}"/>
                             <TextBox Height="20" Grid.Row="1"/>
                         </Grid>
                     </GroupBox>
-                    <GroupBox Background="Transparent" local:UIFocusGroup.FocusGroupPath="Panel3" Header="Panel 3" Grid.Column="4" Margin="0,0,0,5" Style="{DynamicResource FocusableGroupBoxStyle}">
+                    <GroupBox BorderThickness="1" Background="Transparent" local:UIFocusGroup.FocusGroupPath="Panel3" Header="Panel 3" Grid.Column="4" Style="{DynamicResource FocusableGroupBoxStyle}">
                         <GroupBox.InputBindings>
                             <bindings:ShortcutBinding ShortcutAndUsageId="Panel3/Action1" Command="{Binding P3Action1}"/>
                         </GroupBox.InputBindings>
-                        <CheckBox HorizontalAlignment="Center" VerticalAlignment="Center" Content="CTRL + SHIFT + A&#xD;&#xA;and CTRL + X" Height="32" IsChecked="{Binding IsP3Action1Checked, UpdateSourceTrigger=PropertyChanged}"/>
+                        <CheckBox HorizontalAlignment="Center" VerticalAlignment="Center" Content="{DynamicResource ShortcutPaths.Panel3/Action1}" Height="32" IsChecked="{Binding IsP3Action1Checked, UpdateSourceTrigger=PropertyChanged}"/>
                     </GroupBox>
-                    <GroupBox Background="Transparent" local:UIFocusGroup.FocusGroupPath="Panel4" Header="Panel 4" Grid.Row="2" Style="{DynamicResource FocusableGroupBoxStyle}">
+                    <GroupBox BorderThickness="1" Background="Transparent" local:UIFocusGroup.FocusGroupPath="Panel4" Header="Panel 4" Grid.Row="2" Style="{DynamicResource FocusableGroupBoxStyle}">
                         <GroupBox.InputBindings>
                             <bindings:ShortcutBinding ShortcutAndUsageId="Panel4/Action1" Command="{Binding P4Action1}"/>
                         </GroupBox.InputBindings>
-                        <CheckBox HorizontalAlignment="Center" VerticalAlignment="Center" Content="CTRL + 4" Height="15" IsChecked="{Binding IsP4Action1Checked, UpdateSourceTrigger=PropertyChanged}"/>
+                        <CheckBox HorizontalAlignment="Center" VerticalAlignment="Center" Content="{DynamicResource ShortcutPaths.Panel4/Action1}" Height="18" IsChecked="{Binding IsP4Action1Checked, UpdateSourceTrigger=PropertyChanged}"/>
                     </GroupBox>
-                    <GroupBox Background="Transparent" local:UIFocusGroup.FocusGroupPath="Panel5" Header="Panel 5" Grid.Row="2" Grid.Column="2" Style="{DynamicResource FocusableGroupBoxStyle}">
+                    <GroupBox BorderThickness="1" Background="Transparent" local:UIFocusGroup.FocusGroupPath="Panel5" Header="Panel 5" Grid.Row="2" Grid.Column="2" Style="{DynamicResource FocusableGroupBoxStyle}">
                         <GroupBox.InputBindings>
                             <bindings:ShortcutBinding ShortcutAndUsageId="Panel5/Action1" Command="{Binding P5Action1}"/>
                         </GroupBox.InputBindings>
-                        <CheckBox HorizontalAlignment="Center" VerticalAlignment="Center" Content="CTRL + 5, CTRL + 6, &#xA;and CTRL + SHIFT + 7" Height="32" IsChecked="{Binding IsP5Action1Checked, UpdateSourceTrigger=PropertyChanged}"/>
+                        <CheckBox HorizontalAlignment="Center" VerticalAlignment="Center" Content="{DynamicResource ShortcutPaths.Panel5/Action1}" Height="32" IsChecked="{Binding IsP5Action1Checked, UpdateSourceTrigger=PropertyChanged}"/>
                     </GroupBox>
-                    <GroupBox Background="Transparent" local:UIFocusGroup.FocusGroupPath="Panel6" Header="Panel 6" Grid.Row="2" Grid.Column="4" Style="{DynamicResource FocusableGroupBoxStyle}">
+                    <GroupBox BorderThickness="1" Background="Transparent" local:UIFocusGroup.FocusGroupPath="Panel6" Header="Panel 6" Grid.Row="2" Grid.Column="4" Style="{DynamicResource FocusableGroupBoxStyle}">
                         <GroupBox.InputBindings>
                             <bindings:ShortcutBinding ShortcutAndUsageId="Panel6/Action1" Command="{Binding P6Action1}"/>
                         </GroupBox.InputBindings>
-                        <CheckBox HorizontalAlignment="Center" VerticalAlignment="Center" Content="CTRL + SHIFT + 2" Height="15" IsChecked="{Binding IsP6Action1Checked, UpdateSourceTrigger=PropertyChanged}"/>
+                        <CheckBox HorizontalAlignment="Center" VerticalAlignment="Center" Content="{DynamicResource ShortcutPaths.Panel6/Action1}" Height="18" IsChecked="{Binding IsP6Action1Checked, UpdateSourceTrigger=PropertyChanged}"/>
                     </GroupBox>
                 </Grid>
             </Grid>
@@ -113,7 +126,7 @@
                     <converters:KeyStrokeRepresentationConverter x:Key="KeyStrokeRepresentationConverter"/>
                     <converters:MouseStrokeRepresentationConverter x:Key="MouseStrokeRepresentationConverter"/>
                 </Grid.Resources>
-                <TreeView DataContext="{Binding ShortcutManager.Root, UpdateSourceTrigger=PropertyChanged}" ItemsSource="{Binding Children}" HorizontalContentAlignment="Stretch" ScrollViewer.CanContentScroll="False">
+                <TreeView DataContext="{Binding ShortcutManager.Root, UpdateSourceTrigger=PropertyChanged}" ItemsSource="{Binding Children}" HorizontalContentAlignment="Stretch" ScrollViewer.CanContentScroll="False" BorderThickness="0">
                     <TreeView.Resources>
                         <HierarchicalDataTemplate DataType="{x:Type viewModels:ShortcutGroupViewModel}" ItemsSource="{Binding Children}">
                             <Grid>
@@ -121,7 +134,7 @@
                             </Grid>
                         </HierarchicalDataTemplate>
                         <DataTemplate DataType="{x:Type viewModels:ShortcutViewModel}">
-                            <DockPanel ToolTip="{Binding Description}" Background="Transparent" HorizontalAlignment="Stretch">
+                            <DockPanel acs:ContextMenuHelper.ContextProvider="{Binding}" ToolTip="{Binding Description}" Background="Transparent" HorizontalAlignment="Stretch">
                                 <ItemsControl ItemsSource="{Binding InputStrokes}" Background="Transparent" BorderThickness="0" DockPanel.Dock="Right">
                                     <ItemsControl.ItemsPanel>
                                         <ItemsPanelTemplate>

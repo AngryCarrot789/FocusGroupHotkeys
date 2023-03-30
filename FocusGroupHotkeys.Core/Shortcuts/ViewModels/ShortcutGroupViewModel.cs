@@ -1,10 +1,13 @@
 using System.Collections.ObjectModel;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using FocusGroupHotkeys.Core.Shortcuts.Managing;
 
 namespace FocusGroupHotkeys.Core.Shortcuts.ViewModels {
     public class ShortcutGroupViewModel : BaseViewModel {
         private readonly ObservableCollection<object> children;
+
+        public ShortcutManagerViewModel Manager { get; set; }
 
         public ShortcutGroup GroupReference { get; set; }
 
@@ -39,17 +42,20 @@ namespace FocusGroupHotkeys.Core.Shortcuts.ViewModels {
             }
         }
 
-        public static ShortcutGroupViewModel CreateFrom(ShortcutGroup group) {
+        public static ShortcutGroupViewModel CreateFrom(ShortcutGroup @group, ShortcutManagerViewModel manager) {
             ShortcutGroupViewModel groupViewModel = new ShortcutGroupViewModel(group.FocusGroupPath, group.IsGlobal, group.InheritFromParent) {
-                GroupReference = group
+                GroupReference = group,
+                Manager = manager
             };
 
             foreach (ShortcutGroup innerGroup in group.Groups) {
-                groupViewModel.AddItem(CreateFrom(innerGroup));
+                groupViewModel.AddItem(CreateFrom(innerGroup, manager));
             }
 
             foreach (ManagedShortcut shortcut in group.Shortcuts) {
-                groupViewModel.AddItem(new ShortcutViewModel(shortcut));
+                groupViewModel.AddItem(new ShortcutViewModel(shortcut) {
+                    Manager = manager
+                });
             }
 
             return groupViewModel;
@@ -63,8 +69,10 @@ namespace FocusGroupHotkeys.Core.Shortcuts.ViewModels {
 
             foreach (ShortcutViewModel shortcut in this.children.OfType<ShortcutViewModel>()) {
                 IShortcut realShortcut = shortcut.SaveToRealShortcut();
-                ManagedShortcut managed = group.AddShortcut(shortcut.Name, realShortcut);
-                managed.Description = shortcut.Description;
+                if (realShortcut != null) {
+                    ManagedShortcut managed = group.AddShortcut(shortcut.Name, realShortcut);
+                    managed.Description = shortcut.Description;
+                }
             }
 
             return group;

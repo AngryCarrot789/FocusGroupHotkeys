@@ -39,9 +39,9 @@ namespace FocusGroupHotkeys.Core.Shortcuts.Usage {
 
         public MouseShortcutUsage(IMouseShortcut shortcut) {
             this.MouseShortcut = shortcut;
-            this.Strokes = new LinkedList<MouseStroke>(shortcut.SecondMouseStrokes);
-            this.currentStroke = this.Strokes.First;
-            this.PreviousStroke = this.Shortcut.PrimaryStroke;
+            this.Strokes = new LinkedList<MouseStroke>(shortcut.MouseStrokes);
+            this.currentStroke = this.Strokes.First.Next;
+            this.PreviousStroke = this.Strokes.First.Value;
         }
 
         public bool OnMouseStroke(in MouseStroke stroke) {

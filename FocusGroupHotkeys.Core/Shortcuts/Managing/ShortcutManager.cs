@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using FocusGroupHotkeys.Core.Inputs;
+using FocusGroupHotkeys.Core.Shortcuts.Serialization;
 using FocusGroupHotkeys.Core.Shortcuts.Usage;
 using FocusGroupHotkeys.Core.Shortcuts.ViewModels;
 
@@ -17,6 +18,14 @@ namespace FocusGroupHotkeys.Core.Shortcuts.Managing {
             this.RootGroup = ShortcutGroup.CreateRoot(true);
             this.ActiveUsages = new Dictionary<IShortcutUsage, ManagedShortcut>();
             this.tempShortcutList = new List<ManagedShortcut>(16);
+        }
+
+        public ShortcutGroup FindGroupByPath(string path) {
+            return this.RootGroup.GetGroupByPath(path);
+        }
+
+        public ManagedShortcut FindShortcutByPath(string path) {
+            return this.RootGroup.GetShortcutByPath(path);
         }
 
         public bool OnKeyStroke(string focusedGroup, in KeyStroke stroke) {

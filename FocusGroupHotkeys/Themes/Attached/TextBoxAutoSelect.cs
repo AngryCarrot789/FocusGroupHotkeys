@@ -2,7 +2,7 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Controls.Primitives;
 
-namespace FocusGroupHotkeys.Themes {
+namespace FocusGroupHotkeys.Themes.Attached {
     public static class TextBoxAutoSelect {
         private static readonly RoutedEventHandler Handler = ControlOnLoaded;
 

@@ -2,11 +2,11 @@ using System.Threading.Tasks;
 using FocusGroupHotkeys.Core.Views.ViewModels;
 
 namespace FocusGroupHotkeys.Core.Views.Dialogs {
-    public abstract class BaseConfirmableDialogViewModel : BaseDialogViewModel {
+    public class BaseConfirmableDialogViewModel : BaseDialogViewModel {
         public RelayCommand ConfirmCommand { get; }
         public RelayCommand CancelCommand { get; }
 
-        protected BaseConfirmableDialogViewModel(IDialog dialog) : base(dialog) {
+        public BaseConfirmableDialogViewModel(IDialog dialog) : base(dialog) {
             this.ConfirmCommand = new RelayCommand(async () => await this.ConfirmAction());
             this.CancelCommand = new RelayCommand(async () => await this.CancelAction());
         }

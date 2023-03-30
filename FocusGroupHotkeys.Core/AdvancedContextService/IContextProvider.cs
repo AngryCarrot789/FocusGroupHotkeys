@@ -1,7 +1,7 @@
 using System.Collections.Generic;
 
-namespace FocusGroupHotkeys.AdvancedContextService {
+namespace FocusGroupHotkeys.Core.AdvancedContextService {
     public interface IContextProvider {
-        IEnumerable<ContextEntry> GetContextEntries();
+        IEnumerable<IBaseContextEntry> RootContextEntries { get; }
     }
 }

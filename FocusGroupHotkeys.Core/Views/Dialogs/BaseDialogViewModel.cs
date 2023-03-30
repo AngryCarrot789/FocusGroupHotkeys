@@ -1,8 +1,8 @@
 namespace FocusGroupHotkeys.Core.Views.Dialogs {
-    public abstract class BaseDialogViewModel : BaseViewModel {
+    public class BaseDialogViewModel : BaseViewModel {
         public IDialog Dialog { get; }
 
-        protected BaseDialogViewModel(IDialog dialog) {
+        public BaseDialogViewModel(IDialog dialog) {
             this.Dialog = dialog;
         }
     }

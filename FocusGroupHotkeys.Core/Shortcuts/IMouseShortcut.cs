@@ -2,15 +2,15 @@ using System.Collections.Generic;
 using FocusGroupHotkeys.Core.Inputs;
 using FocusGroupHotkeys.Core.Shortcuts.Usage;
 
-namespace FocusGroupHotkeys.Core.Shortcuts.ViewModels {
+namespace FocusGroupHotkeys.Core.Shortcuts {
     public interface IMouseShortcut : IShortcut {
         /// <summary>
-        /// Other key strokes required to be pressed for this mouse shortcut
+        /// All of the Mouse Strokes that this shortcut contains
         /// </summary>
-        IEnumerable<MouseStroke> SecondMouseStrokes { get; }
+        IEnumerable<MouseStroke> MouseStrokes { get; }
 
         /// <summary>
-        /// This can be used in order to track the usage of <see cref="SecondKeyStrokes"/>. If
+        /// This can be used in order to track the usage of <see cref="IShortcut.InputStrokes"/>. If
         /// the list is empty, then the return value of this function is effectively pointless
         /// </summary>
         /// <returns></returns>

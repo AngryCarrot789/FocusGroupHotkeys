@@ -1,4 +1,4 @@
-﻿namespace FramePFX.Themes {
+﻿namespace FocusGroupHotkeys.Themes {
     public enum ThemeType {
         Dark,
         Red,

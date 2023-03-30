@@ -1,10 +1,11 @@
 using System;
-using System.Text;
 using FocusGroupHotkeys.Core.Inputs;
-using FocusGroupHotkeys.Core.Utils;
 
 namespace FocusGroupHotkeys.Core.Shortcuts.ViewModels {
     public abstract class InputStrokeViewModel : BaseViewModel {
+        public static Func<KeyStrokeViewModel, string> KeyToReadableString { get; set; } = (x) => x.ToKeyStroke().ToString();
+        public static Func<MouseStrokeViewModel, string> MouseToReadableString { get; set; } = (x) => x.ToMouseStroke().ToString();
+
         public static InputStrokeViewModel CreateFrom(IInputStroke stroke) {
             if (stroke is MouseStroke mouseStroke) {
                 return new MouseStrokeViewModel(mouseStroke);
@@ -18,6 +19,12 @@ namespace FocusGroupHotkeys.Core.Shortcuts.ViewModels {
         }
 
         public abstract IInputStroke ToInputStroke();
+
+        public override string ToString() {
+            return $"{this.GetType()} ({this.ToInputStroke()})";
+        }
+
+        public abstract string ToReadableString();
     }
 
     public class KeyStrokeViewModel : InputStrokeViewModel {
@@ -43,7 +50,7 @@ namespace FocusGroupHotkeys.Core.Shortcuts.ViewModels {
 
         }
 
-        public KeyStrokeViewModel(in KeyStroke stroke) {
+        public KeyStrokeViewModel(KeyStroke stroke) {
             this.keyCode = stroke.KeyCode;
             this.modifiers = stroke.Modifiers;
             this.isKeyRelease = stroke.IsKeyRelease;
@@ -55,6 +62,10 @@ namespace FocusGroupHotkeys.Core.Shortcuts.ViewModels {
 
         public override IInputStroke ToInputStroke() {
             return this.ToKeyStroke();
+        }
+
+        public override string ToReadableString() {
+            return KeyToReadableString(this);
         }
     }
 
@@ -93,7 +104,7 @@ namespace FocusGroupHotkeys.Core.Shortcuts.ViewModels {
 
         }
 
-        public MouseStrokeViewModel(in MouseStroke stroke) {
+        public MouseStrokeViewModel(MouseStroke stroke) {
             this.mouseButton = stroke.MouseButton;
             this.modifiers = stroke.Modifiers;
             this.clickCount = stroke.ClickCount;
@@ -107,6 +118,10 @@ namespace FocusGroupHotkeys.Core.Shortcuts.ViewModels {
 
         public override IInputStroke ToInputStroke() {
             return this.ToMouseStroke();
+        }
+
+        public override string ToReadableString() {
+            return MouseToReadableString(this);
         }
     }
 }

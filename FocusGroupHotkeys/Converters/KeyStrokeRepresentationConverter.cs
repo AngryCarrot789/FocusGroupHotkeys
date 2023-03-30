@@ -3,10 +3,32 @@ using System.Globalization;
 using System.Text;
 using System.Windows.Data;
 using System.Windows.Input;
+using FocusGroupHotkeys.Core.Shortcuts.ViewModels;
 using FocusGroupHotkeys.Core.Utils;
 
 namespace FocusGroupHotkeys.Converters {
     public class KeyStrokeRepresentationConverter : IMultiValueConverter {
+        public static string ToStringFunction(KeyStrokeViewModel stroke) {
+            return ToStringFunction(stroke.KeyCode, stroke.Modifiers, stroke.IsKeyRelease);
+        }
+
+        public static string ToStringFunction(int keyCode, int modifiers, bool release, bool appendRelease = true) {
+            StringBuilder sb = new StringBuilder();
+            string mods = ModsToString((ModifierKeys) modifiers);
+            if (mods.Length > 0) {
+                sb.Append(mods).Append('+');
+            }
+
+            sb.Append((Key) keyCode);
+            if (appendRelease) {
+                sb.Append(release ? " (↑)" : " (↓)");
+            }
+
+            return sb.ToString();
+        }
+
+        public bool AppendRelease { get; set; } = true;
+
         public object Convert(object[] values, Type targetType, object parameter, CultureInfo culture) {
             if (values == null || values.Length != 3) {
                 throw new Exception("This converter requires 3 elements; keycode, modifiers, isRelease");
@@ -16,14 +38,7 @@ namespace FocusGroupHotkeys.Converters {
             if (!(values[1] is int modifiers)) throw new Exception("values[1] must be an int: modifiers");
             if (!(values[2] is bool isRelease)) throw new Exception("values[2] must be a bool: isRelease");
 
-            StringBuilder sb = new StringBuilder();
-            string mods = ModsToString((ModifierKeys) modifiers);
-            if (mods.Length > 0) {
-                sb.Append(mods).Append('+');
-            }
-
-            sb.Append((Key) keyCode).Append(isRelease ? " (R)" : " (P)");
-            return sb.ToString();
+            return ToStringFunction(keyCode, modifiers, isRelease, this.AppendRelease);
         }
 
         public object[] ConvertBack(object value, Type[] targetTypes, object parameter, CultureInfo culture) {

@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using FocusGroupHotkeys.Core.Inputs;
+using FocusGroupHotkeys.Core.Shortcuts.Serialization;
 
 namespace FocusGroupHotkeys.Core.Shortcuts.Managing {
     /// <summary>
@@ -99,7 +100,7 @@ namespace FocusGroupHotkeys.Core.Shortcuts.Managing {
 
             if (this.IsGlobal || this.IsValidSearchForGroup(focus)) {
                 foreach (ManagedShortcut shortcut in this.shortcuts) {
-                    if (shortcut.Shortcut.PrimaryStroke.Equals(stroke)) {
+                    if (!shortcut.Shortcut.IsEmpty && shortcut.Shortcut.PrimaryStroke.Equals(stroke)) {
                         list.Add(shortcut);
                     }
                 }
@@ -134,57 +135,80 @@ namespace FocusGroupHotkeys.Core.Shortcuts.Managing {
             return this.groups.FirstOrDefault(x => name.Equals(x.FocusGroupName));
         }
 
-        /// <summary>
-        /// Gets a group in the given path, and optionally creates groups if they are not present
-        /// </summary>
-        /// <param name="path"></param>
-        /// <param name="create"></param>
-        /// <returns></returns>
-        public ShortcutGroup GetGroupByPath(string path, bool create, bool subGroupsRoot = false) {
+        public ShortcutGroup GetGroupByPath(string path) {
+            return string.IsNullOrWhiteSpace(path) ? this : this.GetGroupByPath(path.Split('/'));
+        }
+
+        public ShortcutGroup GetGroupByPath(string[] path) {
+            return this.GetGroupByPath(path, 0, path.Length);
+        }
+
+        public ShortcutGroup GetGroupByPath(string[] path, int startIndex, int endIndex) {
+            if (path == null || (endIndex - startIndex) == 0) {
+                return this;
+            }
+
+            ValidatePathBounds(path, startIndex, endIndex);
+            ShortcutGroup root = this;
+            for (int i = startIndex; i < endIndex; i++) {
+                if ((root = root.GetGroupByName(path[i])) == null) {
+                    return null;
+                }
+            }
+
+            return root;
+        }
+
+        public ManagedShortcut GetShortcutByPath(string path) {
             if (string.IsNullOrWhiteSpace(path)) {
-                return this;
+                return null;
             }
 
-            string[] split = path.Split('/');
-            return this.GetGroupByPath(split, create, subGroupsRoot);
-        }
-
-        public ShortcutGroup GetGroupByPath(string[] path, bool create, bool subGroupsRoot = false) {
-            return this.GetGroupByPath(path, 0, path.Length, create, subGroupsRoot);
-        }
-
-        public ShortcutGroup GetGroupByPath(string[] path, int startIndex, int endIndex, bool create, bool subGroupsRoot = false) {
-            if (path == null || path.Length <= 0) {
-                return this;
+            int split = path.LastIndexOf('/');
+            if (split == -1) {
+                return this.GetShortcutByName(path);
             }
-            else if (startIndex >= path.Length) {
+            else {
+                return this.GetShortcutByPath(path.Split('/'));
+            }
+        }
+
+        public ManagedShortcut GetShortcutByPath(string[] path) {
+            return this.GetShortcutByPath(path, 0, path.Length);
+        }
+
+        public ManagedShortcut GetShortcutByPath(string[] path, int startIndex, int endIndex) {
+            if (path == null || (endIndex - startIndex) == 0) {
+                return null;
+            }
+
+            ValidatePathBounds(path, startIndex, endIndex);
+            ShortcutGroup root = this;
+            int groupEndIndex = endIndex - 1;
+            for (int i = startIndex; i < groupEndIndex; i++) {
+                if ((root = root.GetGroupByName(path[i])) == null) {
+                    return null;
+                }
+            }
+
+            return root.GetShortcutByName(path[groupEndIndex]);
+        }
+
+        public string GetPathForName(string name) {
+            return string.IsNullOrWhiteSpace(this.FocusGroupPath) ? name : (this.FocusGroupPath + '/' + name);
+        }
+
+        public ManagedShortcut GetShortcutByName(string name) {
+            return this.shortcuts.FirstOrDefault(x => x.Name == name);
+        }
+
+        private static void ValidatePathBounds(string[] path, int startIndex, int endIndex) {
+            if (startIndex >= path.Length) {
                 throw new IndexOutOfRangeException($"startIndex cannot be bigger than or equal to the path length ({startIndex} >= {path.Length})");
             }
             else if (startIndex > endIndex) {
                 throw new IndexOutOfRangeException($"startIndex cannot be bigger than endIndex ({startIndex} > {endIndex})");
             }
-            else {
-                ShortcutGroup root = this;
-                for (int i = startIndex; i < endIndex; i++) {
-                    ShortcutGroup next = root.GetGroupByName(path[i]);
-                    if (next == null) {
-                        if (!create) {
-                            return null;
-                        }
-
-                        root = root.CreateGroupByName(path[i], subGroupsRoot);
-                    }
-                    else {
-                        root = next;
-                    }
-                }
-
-                return root;
-            }
-        }
-
-        public string GetPathForName(string name) {
-            return string.IsNullOrWhiteSpace(this.FocusGroupPath) ? name : (this.FocusGroupPath + '/' + name);
         }
     }
 }

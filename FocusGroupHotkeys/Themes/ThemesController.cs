@@ -2,7 +2,7 @@
 using System.Windows;
 using System.Windows.Media;
 
-namespace FramePFX.Themes {
+namespace FocusGroupHotkeys.Themes {
     public static class ThemesController {
         public static ThemeType CurrentTheme { get; set; }
 

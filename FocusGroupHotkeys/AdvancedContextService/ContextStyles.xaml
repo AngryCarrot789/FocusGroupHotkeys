@@ -1,4 +1,31 @@
 <ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
-                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
-    
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                    xmlns:local="clr-namespace:FocusGroupHotkeys.AdvancedContextService"
+                    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+                    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+                    xmlns:acs="clr-namespace:FocusGroupHotkeys.Core.AdvancedContextService;assembly=FocusGroupHotkeys.Core"
+                    mc:Ignorable="d">
+    <Style x:Key="AdvancedMenuItemMainStyle" TargetType="{x:Type MenuItem}" BasedOn="{StaticResource {x:Type MenuItem}}" d:DataContext="{d:DesignInstance acs:ContextEntry}">
+        <Setter Property="Header" Value="{Binding Header}"/>
+        <Setter Property="InputGestureText" Value="{Binding InputGestureText}"/>
+        <Setter Property="Command" Value="{Binding Command}"/>
+        <Setter Property="CommandParameter" Value="{Binding CommandParameter}"/>
+        <Setter Property="ItemsSource" Value="{Binding Children}"/>
+    </Style>
+
+    <local:MenuItemStyleSelector x:Shared="True" x:Key="AdvancedMenuItemContainerStyleSelector" SeparatorStyle="{StaticResource {x:Type Separator}}">
+        <local:MenuItemStyleSelector.NonCheckableMenuItemStyle>
+            <Style TargetType="{x:Type MenuItem}" BasedOn="{StaticResource AdvancedMenuItemMainStyle}" d:DataContext="{d:DesignInstance acs:ContextEntry}">
+            </Style>
+        </local:MenuItemStyleSelector.NonCheckableMenuItemStyle>
+        <local:MenuItemStyleSelector.CheckableMenuItemStyle>
+            <Style TargetType="{x:Type MenuItem}" BasedOn="{StaticResource AdvancedMenuItemMainStyle}" d:DataContext="{d:DesignInstance acs:ContextEntry}">
+                <Setter Property="IsCheckable" Value="True"/>
+            </Style>
+        </local:MenuItemStyleSelector.CheckableMenuItemStyle>
+    </local:MenuItemStyleSelector>
+    <Style TargetType="{x:Type local:AdvancedContextMenu}" BasedOn="{StaticResource {x:Type ContextMenu}}">
+        <Setter Property="UsesItemContainerTemplate" Value="False"/>
+        <Setter Property="ItemContainerStyleSelector" Value="{StaticResource AdvancedMenuItemContainerStyleSelector}"/>
+    </Style>
 </ResourceDictionary>

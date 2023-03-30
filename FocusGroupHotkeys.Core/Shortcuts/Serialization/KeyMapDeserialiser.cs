@@ -147,8 +147,7 @@ namespace FocusGroupHotkeys.Core.Shortcuts.Serialization {
                 };
 
                 cut.Strokes = new List<object>();
-                this.SerialiseInputStrokeToShortcut(cut, shortcut.Shortcut.PrimaryStroke);
-                foreach (IInputStroke stroke in shortcut.Shortcut.SecondaryStrokes) {
+                foreach (IInputStroke stroke in shortcut.Shortcut.InputStrokes) {
                     this.SerialiseInputStrokeToShortcut(cut, stroke);
                 }
 

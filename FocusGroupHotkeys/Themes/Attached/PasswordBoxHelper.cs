@@ -2,7 +2,7 @@ using System;
 using System.Windows;
 using System.Windows.Controls;
 
-namespace FocusGroupHotkeys.Themes {
+namespace FocusGroupHotkeys.Themes.Attached {
     public class PasswordBoxHelper {
         public static readonly DependencyProperty ListenToLengthProperty =
             DependencyProperty.RegisterAttached(

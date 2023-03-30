@@ -8,6 +8,7 @@ using FocusGroupHotkeys.Core.Shortcuts.Managing;
 using FocusGroupHotkeys.Core.Shortcuts.Usage;
 using FocusGroupHotkeys.Core.Utils;
 using FocusGroupHotkeys.MainView;
+using FocusGroupHotkeys.Shortcuts.Dialogs;
 
 namespace FocusGroupHotkeys {
     public class AppShortcutManager : ShortcutManager {
@@ -16,8 +17,6 @@ namespace FocusGroupHotkeys {
         public const string DEFAULT_USAGE_ID = "DEF";
 
         public static AppShortcutManager Instance { get; } = new AppShortcutManager();
-
-        public static Action<ManagedShortcut> OnShortcutCompleted { get; set; }
 
         /// <summary>
         /// Maps an action ID to a dictionary, which maps a custom ID (relative to each usage of the same shortcut) to the callback function
@@ -61,6 +60,21 @@ namespace FocusGroupHotkeys {
             // this.CreateHotkey("Panel1", () => MessageBox.Show("Panel 1 says ello!"), NewStroke(true, Key.D, ModifierKeys.Control));
             // this.CreateHotkey("Panel1/Inner2", () => MessageBox.Show("Inner 2 says ello!"), NewStroke(true, Key.B, ModifierKeys.Control));
             // this.CreateHotkey("Panel1/Inner3", () => MessageBox.Show("Inner 3 says ello!"), NewStroke(true, Key.C, ModifierKeys.Control));
+        }
+
+        public static bool GetKeyStrokeForEvent(KeyEventArgs e, out KeyStroke stroke, bool isRelease) {
+            Key key = e.Key == Key.System ? e.SystemKey : e.Key;
+            if (IsModifierKey(key) || key == Key.DeadCharProcessed) {
+                stroke = default;
+                return false;
+            }
+
+            stroke = new KeyStroke((int) key, (int) Keyboard.Modifiers, isRelease);
+            return true;
+        }
+
+        public static MouseStroke GetMouseStrokeForEvent(MouseButtonEventArgs e) {
+            return new MouseStroke((int) e.ChangedButton, (int) Keyboard.Modifiers, e.ClickCount);
         }
 
         private static void EnforceIdFormat(string id, string paramName) {

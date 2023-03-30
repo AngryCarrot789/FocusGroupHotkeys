@@ -1,5 +1,7 @@
 using System.Collections.Generic;
+using System.Linq;
 using FocusGroupHotkeys.Core.Inputs;
+using FocusGroupHotkeys.Core.Shortcuts.Serialization;
 
 namespace FocusGroupHotkeys.Core.Shortcuts.Usage {
     public class KeyboardShortcutUsage : IKeyboardShortcutUsage {
@@ -37,9 +39,9 @@ namespace FocusGroupHotkeys.Core.Shortcuts.Usage {
 
         public KeyboardShortcutUsage(IKeyboardShortcut shortcut) {
             this.KeyboardShortcut = shortcut;
-            this.Strokes = new LinkedList<KeyStroke>(shortcut.SecondKeyStrokes);
-            this.currentStroke = this.Strokes.First;
-            this.PreviousStroke = this.Shortcut.PrimaryStroke;
+            this.Strokes = new LinkedList<KeyStroke>(shortcut.KeyStrokes);
+            this.currentStroke = this.Strokes.First.Next;
+            this.PreviousStroke = this.Strokes.First.Value;
         }
 
         public bool OnKeyStroke(in KeyStroke stroke) {

@@ -18,6 +18,11 @@ namespace FocusGroupHotkeys.Core.Shortcuts {
         bool IsMouse { get; }
 
         /// <summary>
+        /// Returns whether this shortcut is empty, meaning it has no input strokes, meaning that it cannot be activated
+        /// </summary>
+        bool IsEmpty { get; }
+
+        /// <summary>
         /// Whether this shortcut has secondary input strokes or not. When it does, it requires
         /// a "Usage" implementation, in order to track the progression of key strokes
         /// </summary>
@@ -29,10 +34,15 @@ namespace FocusGroupHotkeys.Core.Shortcuts {
         IInputStroke PrimaryStroke { get; }
 
         /// <summary>
-        /// Optional secondary input strokes that are required for this shortcut to be fully activated
+        /// All of this shortcut's input strokes, including the primary stroke
         /// </summary>
-        IEnumerable<IInputStroke> SecondaryStrokes { get; }
+        IEnumerable<IInputStroke> InputStrokes { get; }
 
+        /// <summary>
+        /// Creates a shortcut usage for this shortcut
+        /// </summary>
+        /// <returns></returns>
+        /// <exception cref="InvalidOperationException">This shortcut is empty (has no input strokes)</exception>
         IShortcutUsage CreateUsage();
     }
 }

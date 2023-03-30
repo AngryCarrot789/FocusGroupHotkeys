@@ -3,21 +3,22 @@ using System.Windows.Controls;
 using FocusGroupHotkeys.Core.AdvancedContextService;
 
 namespace FocusGroupHotkeys.AdvancedContextService {
-    public class MenuItemTemplateSelector : StyleSelector {
-        public Style MenuItemTemplate { get; set; }
+    public class MenuItemStyleSelector : StyleSelector {
+        public Style NonCheckableMenuItemStyle { get; set; }
+        public Style CheckableMenuItemStyle { get; set; }
 
-        public Style SeparatorTemplate { get; set; }
+        public Style SeparatorStyle { get; set; }
 
-        public MenuItemTemplateSelector() {
+        public MenuItemStyleSelector() {
 
         }
 
         public override Style SelectStyle(object item, DependencyObject container) {
-            if (item is ContextEntry) {
-                return this.MenuItemTemplate;
+            if (container is MenuItem) {
+                return item is ContextEntryCheckable ? this.CheckableMenuItemStyle : this.NonCheckableMenuItemStyle;
             }
-            else if (item is ContextEntrySeparator) {
-                return this.SeparatorTemplate;
+            else if (container is Separator) {
+                return this.SeparatorStyle;
             }
             else {
                 return base.SelectStyle(item, container);

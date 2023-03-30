@@ -13,66 +13,42 @@ namespace FocusGroupHotkeys.Core.Shortcuts {
     /// </para>
     /// </summary>
     public class KeyboardShortcut : IKeyboardShortcut {
-        private readonly List<KeyStroke> secondKeyStrokes;
+        private readonly List<KeyStroke> keyStrokes;
 
-        /// <summary>
-        /// The primary key stroke required for this shortcut
-        /// </summary>
-        public KeyStroke PrimaryKeyStroke { get; }
+        public IInputStroke PrimaryStroke => this.keyStrokes[0];
 
-        /// <summary>
-        /// Other key strokes required to be pressed for this keyboard shortcut
-        /// </summary>
-        public IEnumerable<KeyStroke> SecondKeyStrokes => this.secondKeyStrokes;
-
-        public IInputStroke PrimaryStroke => this.PrimaryKeyStroke;
-
-        public IEnumerable<IInputStroke> SecondaryStrokes {
-            get => this.secondKeyStrokes.Cast<IInputStroke>();
+        public IEnumerable<IInputStroke> InputStrokes {
+            get => this.keyStrokes.Cast<IInputStroke>();
         }
+
+        public IEnumerable<KeyStroke> KeyStrokes => this.keyStrokes;
 
         public bool IsKeyboard => true;
 
         public bool IsMouse => false;
 
-        public bool HasSecondaryStrokes => this.secondKeyStrokes.Count > 0;
+        public bool IsEmpty => this.keyStrokes.Count < 1;
 
-        public KeyboardShortcut(KeyStroke primaryKeyStroke) {
-            this.PrimaryKeyStroke = primaryKeyStroke;
-            this.secondKeyStrokes = new List<KeyStroke>();
+        public bool HasSecondaryStrokes => this.keyStrokes.Count > 1;
+
+        public KeyboardShortcut() {
+            this.keyStrokes = new List<KeyStroke>();
         }
 
-        public KeyboardShortcut(KeyStroke primaryKeyStroke, params KeyStroke[] secondKeyStrokes) {
-            this.PrimaryKeyStroke = primaryKeyStroke;
-            this.secondKeyStrokes = new List<KeyStroke>(secondKeyStrokes);
-        }
-
-        public KeyboardShortcut(KeyStroke primaryKeyStroke, IEnumerable<KeyStroke> secondKeyStrokes) {
-            this.PrimaryKeyStroke = primaryKeyStroke;
-            this.secondKeyStrokes = new List<KeyStroke>(secondKeyStrokes);
-        }
-
-        public KeyboardShortcut(KeyStroke primaryKeyStroke, List<KeyStroke> secondKeyStrokes) {
-            this.PrimaryKeyStroke = primaryKeyStroke;
-            this.secondKeyStrokes = secondKeyStrokes;
+        public KeyboardShortcut(params KeyStroke[] secondKeyStrokes) {
+            this.keyStrokes = new List<KeyStroke>(secondKeyStrokes);
         }
 
         public KeyboardShortcut(IEnumerable<KeyStroke> strokes) {
-            using (IEnumerator<KeyStroke> x = strokes.GetEnumerator()) {
-                if (!x.MoveNext()) {
-                    throw new Exception("IEnumerable did not contain 1 or more elements");
-                }
+            this.keyStrokes = new List<KeyStroke>(strokes);
+        }
 
-                this.PrimaryKeyStroke = x.Current;
-                this.secondKeyStrokes = new List<KeyStroke>();
-                while (x.MoveNext()) {
-                    this.secondKeyStrokes.Add(x.Current);
-                }
-            }
+        public KeyboardShortcut(List<KeyStroke> keyStrokes) {
+            this.keyStrokes = keyStrokes;
         }
 
         public IKeyboardShortcutUsage CreateKeyUsage() {
-            return new KeyboardShortcutUsage(this);
+            return this.IsEmpty ? throw new InvalidOperationException("Shortcut is empty. Cannot create a usage") : new KeyboardShortcutUsage(this);
         }
 
         public IShortcutUsage CreateUsage() {
@@ -80,43 +56,32 @@ namespace FocusGroupHotkeys.Core.Shortcuts {
         }
 
         public override string ToString() {
-            StringBuilder sb = new StringBuilder();
-            sb.Append(this.PrimaryKeyStroke.ToString());
-            foreach (KeyStroke keyStroke in this.secondKeyStrokes) {
-                sb.Append(", ").Append(keyStroke.ToString());
-            }
-
-            return sb.ToString();
+            return string.Join(", ", this.keyStrokes);
         }
 
         public override bool Equals(object obj) {
             if (obj is KeyboardShortcut shortcut) {
-                if (this.PrimaryKeyStroke.Equals(shortcut.PrimaryKeyStroke)) {
-                    int lenA = this.secondKeyStrokes.Count;
-                    int lenB = shortcut.secondKeyStrokes.Count;
-                    if (lenA == 0 && lenB == 0) {
-                        return true;
-                    }
-                    else if (lenA != lenB) {
+                int lenA = this.keyStrokes.Count;
+                int lenB = shortcut.keyStrokes.Count;
+                if (lenA != lenB) {
+                    return false;
+                }
+
+                for (int i = 0; i < lenA; i++) {
+                    if (!this.keyStrokes[i].Equals(shortcut.keyStrokes[i])) {
                         return false;
                     }
-
-                    for (int i = 0; i < lenA; i++) {
-                        if (!this.secondKeyStrokes[i].Equals(shortcut.secondKeyStrokes[i])) {
-                            return false;
-                        }
-                    }
-
-                    return true;
                 }
+
+                return true;
             }
 
             return false;
         }
 
         public override int GetHashCode() {
-            int code = this.PrimaryKeyStroke.GetHashCode();
-            foreach (KeyStroke stroke in this.secondKeyStrokes)
+            int code = 0;
+            foreach (KeyStroke stroke in this.keyStrokes)
                 code += stroke.GetHashCode();
             return code;
         }

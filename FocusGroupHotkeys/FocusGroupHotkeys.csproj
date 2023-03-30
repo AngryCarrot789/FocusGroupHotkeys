@@ -35,6 +35,7 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <ItemGroup>
+    <Reference Include="PresentationFramework.Aero2" />
     <Reference Include="System" />
     <Reference Include="System.Data" />
     <Reference Include="System.Xml" />
@@ -55,8 +56,13 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </ApplicationDefinition>
+    <Compile Include="AdvancedContextService\AdvancedContextMenu.cs" />
+    <Compile Include="AdvancedContextService\AdvancedMenuItem.cs" />
+    <Compile Include="AdvancedContextService\ContextMenuHelper.cs" />
+    <Compile Include="AdvancedContextService\MenuItemStyleSelector.cs" />
     <Compile Include="Bindings\ShortcutInputGesture.cs" />
     <Compile Include="Bindings\ShortcutBinding.cs" />
+    <Compile Include="Converters\ShortcutPathToInputGestureTextConverter.cs" />
     <Compile Include="Converters\KeyStrokeRepresentationConverter.cs" />
     <Compile Include="Converters\MouseStrokeRepresentationConverter.cs" />
     <Compile Include="MainView\MainViewModel.cs" />
@@ -65,6 +71,23 @@
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="AppShortcutManager.cs" />
+    <Compile Include="Shortcuts\Dialogs\KeyboardDialogService.cs" />
+    <Compile Include="Shortcuts\Dialogs\KeyStrokeInputWindow.xaml.cs">
+      <DependentUpon>KeyStrokeInputWindow.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Shortcuts\Dialogs\MouseDialogService.cs" />
+    <Compile Include="Shortcuts\Dialogs\MouseStrokeInputWindow.xaml.cs">
+      <DependentUpon>MouseStrokeInputWindow.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Themes\Attached\CornerHelper.cs" />
+    <Compile Include="Themes\Attached\PasswordBoxHelper.cs" />
+    <Compile Include="Themes\Attached\TextBoxAutoSelect.cs" />
+    <Compile Include="Themes\Attached\TextHinting.cs" />
+    <Compile Include="Themes\Controls.xaml.cs">
+      <DependentUpon>Controls.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Themes\ThemesController.cs" />
+    <Compile Include="Themes\ThemeTypes.cs" />
     <Compile Include="UIFocusGroup.cs" />
     <Compile Include="Views\BaseDialog.cs" />
     <Compile Include="Views\BaseWindow.cs" />
@@ -115,7 +138,40 @@
     <Resource Include="SomeXML.xml" />
   </ItemGroup>
   <ItemGroup>
+    <Page Include="AdvancedContextService\ContextStyles.xaml" />
     <Page Include="MainView\MainWindow.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Include="Shortcuts\Dialogs\KeyStrokeInputWindow.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Shortcuts\Dialogs\MouseStrokeInputWindow.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Themes\ControlColours.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Include="Themes\Controls.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Include="Themes\DeepDark.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Include="Themes\RedBlackTheme.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Include="Themes\SoftDark.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Include="Themes\VeryDarkTheme.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </Page>

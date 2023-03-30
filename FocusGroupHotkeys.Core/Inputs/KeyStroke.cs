@@ -12,12 +12,12 @@ namespace FocusGroupHotkeys.Core.Inputs {
         /// <summary>
         /// A non-null function for converting a key code into a string representation
         /// </summary>
-        public static Func<int, string> KeyCodeToStringProvider { get; set; } = (x) => new StringBuilder(16).Append("KEY[").Append(x).Append(']').ToString();
+        public static Func<int, string> KeyCodeToStringProvider { get; set; } = (x) => new StringBuilder(16).Append("KEY(").Append(x).Append(')').ToString();
 
         /// <summary>
         /// A non-null function for converting a keyboard modifier flag set into a string representation
         /// </summary>
-        public static Func<int, string> ModifierToStringProvider { get; set; } = (x) => new StringBuilder(16).Append("MOD[").Append(x).Append(']').ToString();
+        public static Func<int, string> ModifierToStringProvider { get; set; } = (x) => new StringBuilder(16).Append("MOD(").Append(x).Append(')').ToString();
 
         /// <summary>
         /// The key code involved (cannot be a modifier key). This key code is relative to whatever key system the platform is running on
@@ -70,7 +70,7 @@ namespace FocusGroupHotkeys.Core.Inputs {
             StringBuilder sb = new StringBuilder();
             string mod = ModifierToStringProvider(this.Modifiers);
             if (mod.Length > 0) {
-                sb.Append(mod).Append(' ');
+                sb.Append(mod).Append(" + ");
             }
 
             sb.Append(KeyCodeToStringProvider(this.KeyCode)).Append(' ');

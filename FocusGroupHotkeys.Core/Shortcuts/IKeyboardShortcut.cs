@@ -5,12 +5,12 @@ using FocusGroupHotkeys.Core.Shortcuts.Usage;
 namespace FocusGroupHotkeys.Core.Shortcuts {
     public interface IKeyboardShortcut : IShortcut {
         /// <summary>
-        /// Other key strokes required to be pressed for this keyboard shortcut
+        /// All of the Key Strokes that this shortcut contains
         /// </summary>
-        IEnumerable<KeyStroke> SecondKeyStrokes { get; }
+        IEnumerable<KeyStroke> KeyStrokes { get; }
 
         /// <summary>
-        /// This can be used in order to track the usage of <see cref="SecondKeyStrokes"/>. If
+        /// This can be used in order to track the usage of <see cref="IShortcut.InputStrokes"/>. If
         /// the list is empty, then the return value of this function is effectively pointless
         /// </summary>
         /// <returns></returns>

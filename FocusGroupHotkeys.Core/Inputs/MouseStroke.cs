@@ -6,12 +6,12 @@ namespace FocusGroupHotkeys.Core.Inputs {
         /// <summary>
         /// A non-null function for converting a mouse button into a string representation
         /// </summary>
-        public static Func<int, string> MouseButtonToStringProvider { get; set; } = (x) => new StringBuilder(20).Append("MOUSE[").Append(x).Append(']').ToString();
+        public static Func<int, string> MouseButtonToStringProvider { get; set; } = (x) => new StringBuilder(20).Append("MOUSE(").Append(x).Append(')').ToString();
 
         /// <summary>
         /// A non-null function for converting a keyboard modifier flag set into a string representation
         /// </summary>
-        public static Func<int, string> ModifierToStringProvider { get; set; } = (x) => new StringBuilder(16).Append("MOD[").Append(x).Append(']').ToString();
+        public static Func<int, string> ModifierToStringProvider { get; set; } = (x) => new StringBuilder(16).Append("MOD(").Append(x).Append(')').ToString();
 
         /// <summary>
         /// The mouse button that was clicked. Special care must be taken for mouse wheel inputs
