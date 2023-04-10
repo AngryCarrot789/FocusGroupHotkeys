@@ -34,7 +34,58 @@ Creating events when shortcuts are activated can be done by inheriting from the 
 The return type is passed to the key event's Handled flag.
 
 ## Shortcut activated command binding
-I implemented the extra functionality in the AppShortcutManager. To create a shortcut binding, you can use the ShortcutBinding class which you add to a UIElement's InputBindings (easier than using an attached collection property). The shortcut bindings contain a `ShortcutAndUsageId` property, used to register the shortcut binding 
-with the AppShortcutManager, and the manager will handle the rest (it will store a callback function into the shortcut binding, which invokes the command in a slightly non-standard way)
+I implemented the extra functionality in the `WPFShortcutManager`. To create a shortcut binding, you can use the `ShortcutActionBinding` or `ShortcutCommandBinding` class which you add to a UIElement's InputBindings (easier than using an attached collection property). These 2 classes contain a `ShortcutAndUsageId` property, used to register the shortcut binding with the `WPFShortcutManager`, and the manager will handle the rest (it will store a callback function into the shortcut binding, which invokes the shortcut action or command based on what you used)
 
 Due to the limitation of input bindings, you need to supply the full path in the shortcut binding, because the reference to the input bindings's dependency property parent is internal, meaning the parent group cannot be inferred.
+
+Then there's the "UsageID" part of the binding, which is used as a 2nd filter layer to determind which action(s) finally get called. This is because the shortcut input binding classes register their callbacks with the `WPFShortcutManager` meaning it spans the entire application. Because of this, there could be a case where you have the same shortcut ID used in multiple input bindings, which would cause them to "intersect".
+
+So instead, you would set a specific usage id in the `ShortcutAndUsageId` property (e.g "My/Shortcut/Path:Usage1" and "My/Shortcut/Path:Usage2"). And then, similar to the `FocusGroupPath`, you would set `UsageID` on a specific control (most likely the one which houses the shortcut input bindings, or at least, the one which has a focus group path set on it), e.g. "Usage1" and "Usage2". `UsageID` is inherited so you can create a complex setup of which shortcut actually gets called
+
+### ShortcutCommandBinding should only be used for "global" ICommands
+The shortcut command binding, like the action one, registers a callback with the `WPFShortcutManager` which then gets invoked and the command is executed. However, that callback is only unregistered when `ShortcutAndUsageId` is set to null, which doesn't happen when the control that owns the binding is unloaded/removed from the visual tree, meaning you will effectively cause a memory leak if you were to put a `ShortcutCommandBinding` on for example every ListBoxItem of a ListBox in which items can be added/removed dynamically.
+
+The easiest way around this, is to just use `AnAction`, and register a custom action and then use the `ShortcutActionBinding` to invoke that action. And then you can look for a target in the action event's data context (`IHasDataContext`)
+
+## Examples
+Like what i was talking about above with removing dynamically added items, here is an example from an App i made called SharpPadV2 (v2 of an older version):
+```
+static TextEditorViewMode() {
+    ActionManager.Instance.Register("actions.tabs.CloseTabAction", new CloseTabAction());
+}
+
+private class CloseTabAction : AnAction {
+    public CloseTabAction() : base(() => "Close Tab", () => "Closes the tab you click with the middle mouse") { 
+    }
+
+    public override async Task<bool> Execute(AnActionEventArgs e) {
+        if (e.DataContext.TryGetContext(out TextEditorViewModel editor)) {
+            // each text editor contains a reference to the "container", which is what contains a
+            // collection of all editors along with the active editor. CloseEditor shows a dialog if there are
+            // unsaved changes, etc, and then it removes it from the editor collection
+            await editor.Container.CloseEditor(editor);
+            return true;
+        }
+
+        return false;
+    }
+}
+```
+
+And then in your shortcut XML file:
+```
+<Group Name="Application">
+    <Group Name="Views">
+        <Shortcut Name="CloseViewShortcut" ActionId="actions.views.CloseViewAction" IsGlobal="true">
+            <Keystroke Key="Escape"/>
+        </Shortcut>
+    </Group>
+    <Group Name="EditorTabDeck">
+        <Shortcut Name="CloseTabShortcut" ActionId="actions.tabs.CloseTabAction">
+            <Mousestroke Button="Middle"/>
+        </Shortcut>
+    </Group>
+</Group>
+```
+
+As long as you make sure to load the XML file and the view model registers that action, then it should work without doing anything else. The IHaveDataContext object, which is passed to the `AnActionEventArgs`, will contain the original source object, the data context of the original source object, and the root event sender (normally a window)
