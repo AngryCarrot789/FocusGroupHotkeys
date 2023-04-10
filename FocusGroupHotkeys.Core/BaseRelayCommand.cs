@@ -29,6 +29,18 @@ namespace FocusGroupHotkeys.Core {
             this.isEnabled = true;
         }
 
+        protected static object GetConvertedParameter<T>(object value) {
+            if (value is IConvertible convertible) {
+                return convertible.ToType(typeof(T), null);
+            }
+            else if (value == null) {
+                return default(T);
+            }
+            else {
+                throw new Exception("Parameter is not convertable: " + value);
+            }
+        }
+
         public abstract void Execute(object parameter);
 
         /// <summary>

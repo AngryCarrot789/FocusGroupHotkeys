@@ -1,5 +1,4 @@
-using FocusGroupHotkeys.Core.Inputs;
-using FocusGroupHotkeys.Core.Shortcuts.ViewModels;
+using FocusGroupHotkeys.Core.Shortcuts.Inputs;
 
 namespace FocusGroupHotkeys.Core.Shortcuts.Usage {
     public interface IMouseShortcutUsage : IShortcutUsage {

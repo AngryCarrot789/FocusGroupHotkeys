@@ -1,10 +1,10 @@
 using System;
 using FocusGroupHotkeys.Core.Services;
-using FocusGroupHotkeys.Core.Shortcuts.Dialogs;
-using FocusGroupHotkeys.Core.Shortcuts.Managing;
 using FocusGroupHotkeys.Core.Views.Dialogs.FilePicking;
 using FocusGroupHotkeys.Core.Views.Dialogs.Message;
 using FocusGroupHotkeys.Core.Views.Dialogs.UserInputs;
+using FocusGroupHotkeys.Core.Shortcuts.Dialogs;
+using FocusGroupHotkeys.Core.Shortcuts.Managing;
 
 namespace FocusGroupHotkeys.Core {
     public static class IoC {
@@ -51,5 +51,6 @@ namespace FocusGroupHotkeys.Core {
         }
 
         public static Action<string> OnShortcutManagedChanged { get; set; }
+        public static Action<string> BroadcastShortcutActivity { get; set; }
     }
 }

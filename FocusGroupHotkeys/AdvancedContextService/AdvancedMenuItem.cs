@@ -1,7 +1,6 @@
 using System;
 using System.Windows;
 using System.Windows.Controls;
-using FocusGroupHotkeys.Core.AdvancedContextService;
 
 namespace FocusGroupHotkeys.AdvancedContextService {
     public class AdvancedMenuItem : MenuItem {

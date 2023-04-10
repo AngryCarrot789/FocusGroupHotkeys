@@ -1,9 +1,8 @@
 ﻿using System.Windows;
-using System.Windows.Ink;
 using System.Windows.Input;
-using FocusGroupHotkeys.Converters;
-using FocusGroupHotkeys.Core.Inputs;
+using FocusGroupHotkeys.Core.Shortcuts.Inputs;
 using FocusGroupHotkeys.Core.Views.Dialogs;
+using FocusGroupHotkeys.Shortcuts.Views;
 using FocusGroupHotkeys.Views;
 
 namespace FocusGroupHotkeys.Shortcuts.Dialogs {
@@ -21,7 +20,7 @@ namespace FocusGroupHotkeys.Shortcuts.Dialogs {
         }
 
         private void InputBox_KeyDown(object sender, KeyEventArgs e) {
-            if (AppShortcutManager.GetKeyStrokeForEvent(e, out KeyStroke stroke, this.IsKeyUp)) {
+            if (ShortcutUtils.GetKeyStrokeForEvent(e, out KeyStroke stroke, this.IsKeyUp)) {
                 this.Stroke = stroke;
                 this.UpdateText(stroke);
             }

@@ -4,8 +4,4 @@
     <TargetFramework>netstandard2.0</TargetFramework>
   </PropertyGroup>
 
-  <ItemGroup>
-    <Content Include="Shortcuts\Managing\old_processor.txt" />
-  </ItemGroup>
-
 </Project>

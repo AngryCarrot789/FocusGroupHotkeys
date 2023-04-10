@@ -1,20 +1,14 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using FocusGroupHotkeys.Core.Inputs;
+using FocusGroupHotkeys.Core.Shortcuts.Inputs;
 using FocusGroupHotkeys.Core.Shortcuts.Usage;
-using FocusGroupHotkeys.Core.Shortcuts.ViewModels;
 
 namespace FocusGroupHotkeys.Core.Shortcuts {
     public class MouseKeyboardShortcut : IMouseShortcut, IKeyboardShortcut {
         public static MouseShortcut EmptyMouseKeyboardShortcut = new MouseShortcut();
 
         private readonly List<IInputStroke> inputStrokes;
-
-        public MouseStroke PrimaryMouseStroke => this.PrimaryStroke is MouseStroke stroke ? stroke : throw new Exception("Primary stroke is not a mouse stroke");
-
-        public KeyStroke PrimaryKeyStroke => this.PrimaryStroke is KeyStroke stroke ? stroke : throw new Exception("Primary stroke is not a key stroke");
 
         public IEnumerable<MouseStroke> MouseStrokes => this.inputStrokes.OfType<MouseStroke>();
 
@@ -63,27 +57,29 @@ namespace FocusGroupHotkeys.Core.Shortcuts {
             return this.IsEmpty ? throw new InvalidOperationException("Shortcut is empty. Cannot create a usage") : new MouseKeyboardShortcutUsage(this);
         }
 
+        public bool IsPrimaryStroke(IInputStroke input) {
+            return this.PrimaryStroke.Equals(input);
+        }
+
         public override string ToString() {
             return string.Join(", ", this.inputStrokes);
         }
 
         public override bool Equals(object obj) {
             if (obj is MouseKeyboardShortcut shortcut) {
-                if (this.PrimaryStroke.Equals(shortcut.PrimaryStroke)) {
-                    int lenA = this.inputStrokes.Count;
-                    int lenB = shortcut.inputStrokes.Count;
-                    if (lenA != lenB) {
+                int lenA = this.inputStrokes.Count;
+                int lenB = shortcut.inputStrokes.Count;
+                if (lenA != lenB) {
+                    return false;
+                }
+
+                for (int i = 0; i < lenA; i++) {
+                    if (!this.inputStrokes[i].Equals(shortcut.inputStrokes[i])) {
                         return false;
                     }
-
-                    for (int i = 0; i < lenA; i++) {
-                        if (!this.inputStrokes[i].Equals(shortcut.inputStrokes[i])) {
-                            return false;
-                        }
-                    }
-
-                    return true;
                 }
+
+                return true;
             }
 
             return false;

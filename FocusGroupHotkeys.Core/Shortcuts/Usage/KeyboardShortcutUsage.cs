@@ -1,7 +1,5 @@
 using System.Collections.Generic;
-using System.Linq;
-using FocusGroupHotkeys.Core.Inputs;
-using FocusGroupHotkeys.Core.Shortcuts.Serialization;
+using FocusGroupHotkeys.Core.Shortcuts.Inputs;
 
 namespace FocusGroupHotkeys.Core.Shortcuts.Usage {
     public class KeyboardShortcutUsage : IKeyboardShortcutUsage {

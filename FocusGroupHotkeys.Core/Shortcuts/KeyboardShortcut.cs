@@ -1,8 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using FocusGroupHotkeys.Core.Inputs;
+using FocusGroupHotkeys.Core.Shortcuts.Inputs;
 using FocusGroupHotkeys.Core.Shortcuts.Usage;
 
 namespace FocusGroupHotkeys.Core.Shortcuts {
@@ -55,6 +54,10 @@ namespace FocusGroupHotkeys.Core.Shortcuts {
 
         public IShortcutUsage CreateUsage() {
             return this.CreateKeyUsage();
+        }
+
+        public bool IsPrimaryStroke(IInputStroke input) {
+            return input is KeyStroke stroke && this.keyStrokes[0].Equals(stroke);
         }
 
         public override string ToString() {

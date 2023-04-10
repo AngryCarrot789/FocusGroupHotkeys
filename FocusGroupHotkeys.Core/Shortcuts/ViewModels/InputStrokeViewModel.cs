@@ -1,5 +1,5 @@
 using System;
-using FocusGroupHotkeys.Core.Inputs;
+using FocusGroupHotkeys.Core.Shortcuts.Inputs;
 
 namespace FocusGroupHotkeys.Core.Shortcuts.ViewModels {
     public abstract class InputStrokeViewModel : BaseViewModel {

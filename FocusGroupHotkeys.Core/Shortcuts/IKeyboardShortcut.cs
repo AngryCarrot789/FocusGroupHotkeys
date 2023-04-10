@@ -1,5 +1,5 @@
 using System.Collections.Generic;
-using FocusGroupHotkeys.Core.Inputs;
+using FocusGroupHotkeys.Core.Shortcuts.Inputs;
 using FocusGroupHotkeys.Core.Shortcuts.Usage;
 
 namespace FocusGroupHotkeys.Core.Shortcuts {

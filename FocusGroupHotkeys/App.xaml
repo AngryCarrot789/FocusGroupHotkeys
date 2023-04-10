@@ -3,6 +3,7 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:local="clr-namespace:FocusGroupHotkeys"
              xmlns:system="clr-namespace:System;assembly=mscorlib"
+             xmlns:shortcuts="clr-namespace:FocusGroupHotkeys.Shortcuts"
              Startup="App_OnStartup">
     <Application.Resources>
         <ResourceDictionary>
@@ -65,7 +66,7 @@
                                 <ContentPresenter Grid.ColumnSpan="2" Grid.Column="1" Margin="0,3,0,0" Grid.Row="2" x:Name="Contents" SnapsToDevicePixels="{TemplateBinding SnapsToDevicePixels}" />
                             </Grid>
                             <ControlTemplate.Triggers>
-                                <Trigger Property="local:UIFocusGroup.HasGroupFocus" Value="True">
+                                <Trigger Property="shortcuts:UIFocusGroup.HasGroupFocus" Value="True">
                                     <Setter TargetName="TopHeaderBorder" Property="BorderBrush" Value="Red"/>
                                     <Setter TargetName="MainBorder" Property="BorderBrush" Value="Red"/>
                                 </Trigger>

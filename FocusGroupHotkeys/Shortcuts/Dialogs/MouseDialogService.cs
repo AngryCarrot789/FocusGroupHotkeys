@@ -1,5 +1,5 @@
-using FocusGroupHotkeys.Core.Inputs;
 using FocusGroupHotkeys.Core.Shortcuts.Dialogs;
+using FocusGroupHotkeys.Core.Shortcuts.Inputs;
 
 namespace FocusGroupHotkeys.Shortcuts.Dialogs {
     public class MouseDialogService : IMouseDialogService {

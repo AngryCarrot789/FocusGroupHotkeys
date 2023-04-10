@@ -1,11 +1,8 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Runtime.CompilerServices;
-using System.Text;
-using FocusGroupHotkeys.Core.Inputs;
+using FocusGroupHotkeys.Core.Shortcuts.Inputs;
 using FocusGroupHotkeys.Core.Shortcuts.Usage;
-using FocusGroupHotkeys.Core.Shortcuts.ViewModels;
 
 namespace FocusGroupHotkeys.Core.Shortcuts {
     public class MouseShortcut : IMouseShortcut {
@@ -51,6 +48,10 @@ namespace FocusGroupHotkeys.Core.Shortcuts {
 
         public IShortcutUsage CreateUsage() {
             return this.CreateMouseUsage();
+        }
+
+        public bool IsPrimaryStroke(IInputStroke input) {
+            return input is MouseStroke stroke && this.mouseStrokes[0].Equals(stroke);
         }
 
         public override string ToString() {

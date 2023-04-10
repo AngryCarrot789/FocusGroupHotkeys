@@ -1,19 +1,7 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using System.Windows;
-using System.Windows.Controls;
-using System.Windows.Data;
-using System.Windows.Documents;
-using System.Windows.Input;
-using System.Windows.Media;
-using System.Windows.Media.Imaging;
-using System.Windows.Shapes;
-using FocusGroupHotkeys.Converters;
-using FocusGroupHotkeys.Core.Inputs;
+﻿using System.Windows.Input;
+using FocusGroupHotkeys.Core.Shortcuts.Inputs;
 using FocusGroupHotkeys.Core.Views.Dialogs;
+using FocusGroupHotkeys.Shortcuts.Views;
 using FocusGroupHotkeys.Views;
 
 namespace FocusGroupHotkeys.Shortcuts.Dialogs {
@@ -30,9 +18,16 @@ namespace FocusGroupHotkeys.Shortcuts.Dialogs {
         }
 
         private void InputBox_MouseDown(object sender, MouseButtonEventArgs e) {
-            MouseStroke stroke = AppShortcutManager.GetMouseStrokeForEvent(e);
+            MouseStroke stroke = ShortcutUtils.GetMouseStrokeForEvent(e);
             this.Stroke = stroke;
             this.InputBox.Text = MouseStrokeRepresentationConverter.ToStringFunction(stroke.MouseButton, stroke.Modifiers, stroke.ClickCount, stroke.WheelDelta);
+        }
+
+        private void InputBox_MouseWheel(object sender, MouseWheelEventArgs e) {
+            if (ShortcutUtils.GetMouseStrokeForEvent(e, out MouseStroke stroke)) {
+                this.Stroke = stroke;
+                this.InputBox.Text = MouseStrokeRepresentationConverter.ToStringFunction(stroke.MouseButton, stroke.Modifiers, stroke.ClickCount, stroke.WheelDelta);
+            }
         }
     }
 }

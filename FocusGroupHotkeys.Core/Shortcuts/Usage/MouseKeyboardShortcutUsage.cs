@@ -1,6 +1,5 @@
 using System.Collections.Generic;
-using FocusGroupHotkeys.Core.Inputs;
-using FocusGroupHotkeys.Core.Shortcuts.ViewModels;
+using FocusGroupHotkeys.Core.Shortcuts.Inputs;
 
 namespace FocusGroupHotkeys.Core.Shortcuts.Usage {
     public class MouseKeyboardShortcutUsage : IKeyboardShortcutUsage, IMouseShortcutUsage {

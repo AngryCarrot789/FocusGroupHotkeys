@@ -1,11 +1,10 @@
 using System;
 using System.Collections.Generic;
-using System.Collections.Specialized;
 using System.IO;
 using System.Linq;
 using System.Xml;
 using System.Xml.Serialization;
-using FocusGroupHotkeys.Core.Inputs;
+using FocusGroupHotkeys.Core.Shortcuts.Inputs;
 using FocusGroupHotkeys.Core.Shortcuts.Managing;
 
 namespace FocusGroupHotkeys.Core.Shortcuts.Serialization {
@@ -89,11 +88,11 @@ namespace FocusGroupHotkeys.Core.Shortcuts.Serialization {
                 foreach (Shortcut cut in keyGroup.Shortcuts) {
                     bool hasKey = false;
                     bool hasMouse = false;
-                    if (cut.Strokes != null && cut.Strokes.Count(x => x is Keystroke) > 0) {
+                    if (cut.Strokes != null && cut.Strokes.Any(x => x is Keystroke)) {
                         hasKey = true;
                     }
 
-                    if (cut.Strokes != null && cut.Strokes.Count(x => x is Mousestroke) > 0) {
+                    if (cut.Strokes != null && cut.Strokes.Any(x => x is Mousestroke)) {
                         hasMouse = true;
                     }
 
@@ -113,9 +112,10 @@ namespace FocusGroupHotkeys.Core.Shortcuts.Serialization {
                         continue;
                     }
 
-                    ManagedShortcut managed = realKeyGroup.AddShortcut(cut.Name, shortcut, cut.IsGlobalBool);
-                    managed.ActionID = cut.ActionID;
+                    GroupedShortcut managed = realKeyGroup.AddShortcut(cut.Name, shortcut, cut.IsGlobalBool);
+                    managed.ActionId = cut.ActionId;
                     managed.Description = cut.Description;
+                    managed.DisplayName = cut.DisplayName;
                 }
             }
 
@@ -123,19 +123,21 @@ namespace FocusGroupHotkeys.Core.Shortcuts.Serialization {
                 foreach (Group innerGroup in keyGroup.InnerGroups) {
                     ShortcutGroup realInnerGroup = realKeyGroup.CreateGroupByName(innerGroup.Name, innerGroup.IsGlobalBool, innerGroup.InheritBool);
                     realInnerGroup.Description = innerGroup.Description;
+                    realInnerGroup.DisplayName = innerGroup.DisplayName;
                     this.DeserialiseGroupData(innerGroup, realInnerGroup);
                 }
             }
         }
 
         protected virtual void SerialiseGroup(Group group, ShortcutGroup focusGroup) {
-            group.Name = focusGroup.FocusGroupName;
+            group.Name = focusGroup.Name;
+            group.DisplayName = focusGroup.DisplayName;
             group.Description = string.IsNullOrWhiteSpace(focusGroup.Description) ? null : focusGroup.Description;
             group.IsGlobal = SerialiseObject(focusGroup.IsGlobal, false);
             group.InheritFromParent = SerialiseObject(focusGroup.InheritFromParent, false);
             group.InnerGroups = new List<Group>();
             group.Shortcuts = new List<Shortcut>();
-            foreach (ManagedShortcut shortcut in focusGroup.Shortcuts) {
+            foreach (GroupedShortcut shortcut in focusGroup.Shortcuts) {
                 if (shortcut.Shortcut.IsEmpty) {
                     continue;
                 }
@@ -143,7 +145,7 @@ namespace FocusGroupHotkeys.Core.Shortcuts.Serialization {
                 Shortcut cut = new Shortcut {
                     Name = shortcut.Name,
                     Description = shortcut.Description,
-                    ActionID = shortcut.ActionID,
+                    ActionId = shortcut.ActionId,
                     IsGlobal = SerialiseObject(shortcut.IsGlobal, false),
                     Strokes = new List<object>()
                 };

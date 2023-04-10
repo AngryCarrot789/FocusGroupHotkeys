@@ -9,8 +9,9 @@ using FocusGroupHotkeys.Core;
 using FocusGroupHotkeys.Core.Services;
 using FocusGroupHotkeys.Core.Shortcuts.Managing;
 using FocusGroupHotkeys.Core.Shortcuts.ViewModels;
-using FocusGroupHotkeys.MainView;
+using FocusGroupHotkeys.Shortcuts;
 using FocusGroupHotkeys.Shortcuts.Dialogs;
+using FocusGroupHotkeys.Shortcuts.Views;
 using FocusGroupHotkeys.Views.Dialogs.FilePicking;
 using FocusGroupHotkeys.Views.Dialogs.Message;
 using FocusGroupHotkeys.Views.Dialogs.UserInputs;
@@ -25,7 +26,7 @@ namespace FocusGroupHotkeys {
                 UpdateShortcutResourcesRecursive(dictionary, innerGroup);
             }
 
-            foreach (ManagedShortcut shortcut in group.Shortcuts) {
+            foreach (GroupedShortcut shortcut in group.Shortcuts) {
                 UpdatePath(dictionary, shortcut.Path);
             }
         }
@@ -46,26 +47,24 @@ namespace FocusGroupHotkeys {
             InputStrokeViewModel.MouseToReadableString = MouseStrokeRepresentationConverter.ToStringFunction;
             IoC.KeyboardDialogs = new KeyboardDialogService();
             IoC.MouseDialogs = new MouseDialogService();
-            IoC.ShortcutManager = AppShortcutManager.Instance;
+            IoC.ShortcutManager = WPFShortcutManager.Instance;
             IoC.OnShortcutManagedChanged = (x) => {
                 if (!string.IsNullOrWhiteSpace(x)) {
                     UpdatePath(this.Resources, x);
                 }
             };
 
-            string path = @"F:\VSProjsV2\FocusGroupHotkeys\FocusGroupHotkeys\SomeXML.xml";
-
-            AppShortcutManager.Instance.Root = null;
+            const string path = @"F:\VSProjsV2\FocusGroupHotkeys\FocusGroupHotkeys\SomeXML.xml";
             using (Stream stream = File.OpenRead(path)) {
                 ShortcutGroup result = WPFKeyMapDeserialiser.Instance.Deserialise(stream);
-                AppShortcutManager.Instance.Root = result;
+                WPFShortcutManager.Instance.SetRoot(result);
             }
 
             // try {
-            //     AppShortcutManager.Instance.Root = null;
+            //     WPFShortcutManager.Instance.Root = null;
             //     using (Stream stream = File.OpenRead(path)) {
             //         ShortcutGroup result = WPFKeyMapDeserialiser.Instance.Deserialise(stream);
-            //         AppShortcutManager.Instance.Root = result;
+            //         WPFShortcutManager.Instance.Root = result;
             //     }
             // }
             // catch (Exception ex) {

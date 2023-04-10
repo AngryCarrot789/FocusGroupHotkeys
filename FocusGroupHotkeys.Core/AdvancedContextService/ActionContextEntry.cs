@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using System.Windows.Input;
+using FocusGroupHotkeys.Core.Actions;
 using FocusGroupHotkeys.Core.AdvancedContextService.Base;
 
 namespace FocusGroupHotkeys.Core.AdvancedContextService {

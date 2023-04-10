@@ -3,57 +3,57 @@
     <Group Name="Panel1">
         <Group Name="Inner1" IsGlobal="true" Description="test global panel">
             <Shortcut Name="Action1">
-                <Keystroke Mods="CTRL+SHIFT" Char="D1"/>
+                <Keystroke Mods="CTRL+SHIFT" Key="D1"/>
             </Shortcut>
         </Group>
         <Group Name="Inner2">
             <Shortcut Name="Action2">
-                <Keystroke Mods="CTRL+SHIFT" Char="D2"/>
+                <Keystroke Mods="CTRL+SHIFT" Key="D2"/>
             </Shortcut>
         </Group>
         <Group Name="Inner3" IsGlobal="true">
             <Shortcut Name="Action3">
-                <Keystroke Mods="CTRL+SHIFT" Char="D3"/>
+                <Keystroke Mods="CTRL+SHIFT" Key="D3"/>
                 <!-- lmfao fun fact, ClickCount can be pretty much anything. You can make an octuple click mouse stroke -->
                 <!-- If you can click 8 times in less than 500ms (at least on windows), then go ahead :-) -->
                 <Mousestroke Mods="CTRL+SHIFT" Button="X1" ClickCount="3"/>
             </Shortcut>
         </Group>
         <Shortcut Name="Action4">
-            <Keystroke Mods="CTRL" Char="M"/>
-            <Keystroke Mods="CTRL" Char="D4"/>
+            <Keystroke Mods="CTRL" Key="M"/>
+            <Keystroke Mods="CTRL" Key="D4"/>
         </Shortcut>
         <Shortcut Name="Action5">
-            <Keystroke Mods="CTRL" Char="M"/>
-            <Keystroke Mods="CTRL" Char="D5"/>
+            <Keystroke Mods="CTRL" Key="M"/>
+            <Keystroke Mods="CTRL" Key="D5"/>
         </Shortcut>
     </Group>
     <Group Name="Panel2">
         <Shortcut Name="Action1" IsGlobal="true">
-            <Keystroke Mods="CTRL" Char="D2"/>
+            <Keystroke Mods="CTRL" Key="D2"/>
         </Shortcut>
     </Group>
     <Group Name="Panel3">
         <Shortcut Name="Action1">
-            <Keystroke Mods="CTRL+SHIFT" Char="A"/>
-            <Keystroke Mods="CTRL" Char="X"/>
+            <Keystroke Mods="CTRL+SHIFT" Key="A"/>
+            <Keystroke Mods="CTRL" Key="X"/>
         </Shortcut>
     </Group>
     <Group Name="Panel4">
         <Shortcut Name="Action1">
-            <Keystroke Mods="CTRL" Char="D4"/>
+            <Keystroke Mods="CTRL" Key="D4"/>
         </Shortcut>
     </Group>
     <Group Name="Panel5">
         <Shortcut Name="Action1">
-            <Keystroke Mods="CTRL" Char="D5"/>
-            <Keystroke Mods="CTRL" Char="D6"/>
-            <Keystroke Mods="CTRL+SHIFT" Char="D7"/>
+            <Keystroke Mods="CTRL" Key="D5"/>
+            <Keystroke Mods="CTRL" Key="D6"/>
+            <Keystroke Mods="CTRL+SHIFT" Key="D7"/>
         </Shortcut>
     </Group>
     <Group Name="Panel6">
         <Shortcut Name="Action1">
-            <Keystroke Mods="CTRL+SHIFT" Char="D2"/>
+            <Keystroke Mods="CTRL+SHIFT" Key="D2"/>
         </Shortcut>
     </Group>
 </KeyMap>

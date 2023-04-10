@@ -1,6 +1,6 @@
 using System;
 using System.Collections.Generic;
-using FocusGroupHotkeys.Core.Inputs;
+using FocusGroupHotkeys.Core.Shortcuts.Inputs;
 using FocusGroupHotkeys.Core.Shortcuts.Usage;
 
 namespace FocusGroupHotkeys.Core.Shortcuts {
@@ -48,5 +48,7 @@ namespace FocusGroupHotkeys.Core.Shortcuts {
         /// <returns></returns>
         /// <exception cref="InvalidOperationException">This shortcut is empty (has no input strokes)</exception>
         IShortcutUsage CreateUsage();
+
+        bool IsPrimaryStroke(IInputStroke input);
     }
 }

@@ -1,6 +1,7 @@
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Input;
+using FocusGroupHotkeys.Core.Actions;
 using FocusGroupHotkeys.Core.AdvancedContextService;
 using FocusGroupHotkeys.Core.Shortcuts.Managing;
 

@@ -8,12 +8,13 @@ namespace FocusGroupHotkeys.Core.Shortcuts.Serialization {
     }
 
     public class Group {
-        [XmlAttribute("Name")] public string Name { get; set; }
+        [XmlAttribute("Name")]        public string Name { get; set; }
+        [XmlAttribute("DisplayName")] public string DisplayName { get; set; }
         [XmlAttribute("Description")] public string Description { get; set; }
-        [XmlAttribute("IsGlobal")] public string IsGlobal { get; set; }
+        [XmlAttribute("IsGlobal")]    public string IsGlobal { get; set; }
         [XmlAttribute("InheritPath")] public string InheritFromParent { get; set; }
-        [XmlElement("Group")] public List<Group> InnerGroups { get; set; }
-        [XmlElement("Shortcut")] public List<Shortcut> Shortcuts { get; set; }
+        [XmlElement("Group")]         public List<Group> InnerGroups { get; set; }
+        [XmlElement("Shortcut")]      public List<Shortcut> Shortcuts { get; set; }
 
         [XmlIgnore]
         public bool IsGlobalBool => !string.IsNullOrWhiteSpace(this.IsGlobal) && this.IsGlobal.ToLower().Equals("true");
@@ -22,11 +23,12 @@ namespace FocusGroupHotkeys.Core.Shortcuts.Serialization {
         public bool InheritBool => !string.IsNullOrWhiteSpace(this.InheritFromParent) && this.InheritFromParent.ToLower().Equals("true");
     }
 
-    public class Shortcut {
-        [XmlAttribute("Name")] public string Name { get; set; }
+    public class  Shortcut {
+        [XmlAttribute("Name")]        public string Name { get; set; }
+        [XmlAttribute("DisplayName")] public string DisplayName { get; set; }
         [XmlAttribute("Description")] public string Description { get; set; }
-        [XmlAttribute("ActionID")] public string ActionID { get; set; }
-        [XmlAttribute("IsGlobal")] public string IsGlobal { get; set; }
+        [XmlAttribute("ActionId")]    public string ActionId { get; set; }
+        [XmlAttribute("IsGlobal")]    public string IsGlobal { get; set; }
 
         [XmlElement("Keystroke", Type = typeof(Keystroke))]
         [XmlElement("Mousestroke", Type = typeof(Mousestroke))]
@@ -37,7 +39,7 @@ namespace FocusGroupHotkeys.Core.Shortcuts.Serialization {
     }
 
     public class Keystroke {
-        [XmlAttribute("Char")]       public string Char { get; set; }
+        [XmlAttribute("Key")]        public string KeyName { get; set; }
         [XmlAttribute("Keycode")]    public string KeyCode { get; set; }
         [XmlAttribute("Mods")]       public string Mods { get; set; }
         [XmlAttribute("IsRelease")]  public string IsRelease { get; set; }
