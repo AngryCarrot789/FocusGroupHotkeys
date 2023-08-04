@@ -1,8 +1,10 @@
+using System;
+
 namespace FocusGroupHotkeys.Core.Shortcuts.Inputs {
     /// <summary>
     /// An interface defining behaviour for input strokes
     /// </summary>
-    public interface IInputStroke {
+    public interface IInputStroke : IEquatable<IInputStroke> {
         /// <summary>
         /// This input stroke is keyboard-based
         /// </summary>

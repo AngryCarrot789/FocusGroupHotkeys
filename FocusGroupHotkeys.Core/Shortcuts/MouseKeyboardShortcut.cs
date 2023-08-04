@@ -5,8 +5,11 @@ using FocusGroupHotkeys.Core.Shortcuts.Inputs;
 using FocusGroupHotkeys.Core.Shortcuts.Usage;
 
 namespace FocusGroupHotkeys.Core.Shortcuts {
+    /// <summary>
+    /// A shortcut that accepts a combination of key and mouse strokes
+    /// </summary>
     public class MouseKeyboardShortcut : IMouseShortcut, IKeyboardShortcut {
-        public static MouseShortcut EmptyMouseKeyboardShortcut = new MouseShortcut();
+        public static readonly MouseShortcut EmptyMouseKeyboardShortcut = new MouseShortcut();
 
         private readonly List<IInputStroke> inputStrokes;
 
@@ -24,7 +27,7 @@ namespace FocusGroupHotkeys.Core.Shortcuts {
 
         public bool IsMouse => true;
 
-        public bool IsEmpty => this.inputStrokes.Count < 1;
+        public bool IsEmpty => this.inputStrokes.Count <= 0;
 
         public bool HasSecondaryStrokes => this.inputStrokes.Count > 1;
 

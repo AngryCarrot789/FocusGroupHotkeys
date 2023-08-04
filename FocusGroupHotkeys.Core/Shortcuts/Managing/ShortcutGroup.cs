@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using FocusGroupHotkeys.Core.Shortcuts.Inputs;
-using FocusGroupHotkeys.Core.Shortcuts.Serialization;
 using FocusGroupHotkeys.Core.Utils;
 
 namespace FocusGroupHotkeys.Core.Shortcuts.Managing {
@@ -14,18 +13,19 @@ namespace FocusGroupHotkeys.Core.Shortcuts.Managing {
 
         private readonly List<ShortcutGroup> groups;
         private readonly List<GroupedShortcut> shortcuts;
+        private readonly List<GroupedInputState> inputStates;
         private readonly Dictionary<string, object> mapToItem;
 
         public ShortcutGroup Parent { get; }
 
         /// <summary>
-        /// This group's full path (containing the parent's path and this group's name into one).
-        /// It will either be null (meaning no parent), or a non-empty string. It will also never consist of only whitespaces
+        /// This group's full path (containing the parent's path and this group's name into one). It will either be
+        /// null (meaning we are a root group), or a non-empty string; it will never consist of only whitespaces
         /// </summary>
         public string FullPath { get; }
 
         /// <summary>
-        /// This group's name. It will either be null (meaning no parent), or a non-empty string. It will also never consist of only whitespaces
+        /// This group's name. It will either be null (meaning no parent), or a non-empty string (and also never consisting of only whitespaces)
         /// </summary>
         public string Name { get; }
 
@@ -47,7 +47,7 @@ namespace FocusGroupHotkeys.Core.Shortcuts.Managing {
         /// <summary>
         /// Inherits shortcuts from the parent group
         /// </summary>
-        public bool InheritFromParent { get; }
+        public bool Inherit { get; set; }
 
         /// <summary>
         /// All shortcuts in this focus group
@@ -55,18 +55,26 @@ namespace FocusGroupHotkeys.Core.Shortcuts.Managing {
         public IEnumerable<GroupedShortcut> Shortcuts => this.shortcuts;
 
         /// <summary>
+        /// All input states in this focus group
+        /// </summary>
+        public IEnumerable<GroupedInputState> InputStates => this.inputStates;
+
+        /// <summary>
         /// All child-groups in this focus group
         /// </summary>
         public IEnumerable<ShortcutGroup> Groups => this.groups;
 
         public ShortcutGroup(ShortcutGroup parent, string name, bool isGlobal = false, bool inherit = false) {
-            this.FullPath = (parent != null && name != null) ? parent.GetPathForName(name) : name;
+            if (name != null && string.IsNullOrWhiteSpace(name))
+                throw new ArgumentException("Name must be null or a non-empty string that does not consist of only whitespaces");
             this.Name = name;
-            this.InheritFromParent = inherit;
+            this.FullPath = parent != null && name != null ? parent.GetPathForName(name) : name;
+            this.Inherit = inherit;
             this.IsGlobal = isGlobal;
             this.Parent = parent;
             this.groups = new List<ShortcutGroup>();
             this.shortcuts = new List<GroupedShortcut>();
+            this.inputStates = new List<GroupedInputState>();
             this.mapToItem = new Dictionary<string, object>();
         }
 
@@ -104,44 +112,81 @@ namespace FocusGroupHotkeys.Core.Shortcuts.Managing {
             return managed;
         }
 
+        public GroupedInputState AddInputState(string name, IInputStroke activation, IInputStroke deactivation) {
+            ValidateName(name, "Shortcut name cannot be null or consist of only whitespaces");
+            this.ValidateNameNotInUse(name);
+            GroupedInputState managed = new GroupedInputState(this, name, activation, deactivation);
+            this.mapToItem[name] = managed;
+            this.inputStates.Add(managed);
+            return managed;
+        }
+
         public bool ContainsShortcutByName(string name) {
-            return this.mapToItem.TryGetValue(name, out object value) && value is Shortcut;
+            return this.mapToItem.TryGetValue(name, out object value) && value is ShortcutGroup;
         }
 
         public bool ContainsGroupByName(string name) {
             return this.mapToItem.TryGetValue(name, out object value) && value is ShortcutGroup;
         }
 
-        public List<GroupedShortcut> GetShortcutsWithPrimaryStroke(IInputStroke stroke, string focus) {
-            List<GroupedShortcut> list = new List<GroupedShortcut>();
-            this.CollectShortcutsWithPrimaryStroke(stroke, focus, list);
-            return list;
+        /// <summary>
+        /// Old name: CollectShortcutsWithPrimaryStroke
+        /// </summary>
+        public void DoEvaulateShortcutsAndInputStates(ref GroupEvaulationArgs args, string focus, bool allowDuplicateInheritedShortcuts = false) {
+            this.CollectShortcutsInternal(ref args, string.IsNullOrWhiteSpace(focus) ? null : focus, allowDuplicateInheritedShortcuts);
         }
 
-        public void CollectShortcutsWithPrimaryStroke(IInputStroke stroke, string focus, ICollection<GroupedShortcut> list) {
-            this.CollectShortcutsInternal(stroke, string.IsNullOrWhiteSpace(focus) ? null : focus, list);
-        }
-
-        private void CollectShortcutsInternal(IInputStroke stroke, string focus, ICollection<GroupedShortcut> list) {
-            foreach (ShortcutGroup group in this.Groups) {
-                group.CollectShortcutsInternal(stroke, focus, list);
+        private static bool FindPrimaryStroke(List<GroupedShortcut> list, IInputStroke stroke) {
+            for (int i = 0, c = list.Count; i < c; i++) {
+                if (list[i].Shortcut.IsPrimaryStroke(stroke)) {
+                    return true;
+                }
             }
 
-            bool requireGlobal = !this.IsGlobal && !this.IsValidSearchForGroup(focus);
+            return false;
+        }
+
+        private void CollectShortcutsInternal(ref GroupEvaulationArgs args, string focus, bool allowDuplicateInheritedShortcuts = false) {
+            // Searching groups first is what allows inheritance to work properly, because you search the deepest
+            // levels first and make your way to the root. Similar to how bubble events work
+            foreach (ShortcutGroup group in this.groups) {
+                group.CollectShortcutsInternal(ref args, focus);
+            }
+
+            bool requireGlobal = !this.IsGlobal && !IsFocusPathInScope(this.FullPath, focus, this.Inherit);
             foreach (GroupedShortcut shortcut in this.shortcuts) {
-                if (!requireGlobal || shortcut.IsGlobal) {
-                    if (shortcut.Shortcut != null && !shortcut.Shortcut.IsEmpty && shortcut.Shortcut.IsPrimaryStroke(stroke)) {
-                        list.Add(shortcut);
+                if (args.filter != null && !args.filter(shortcut)) {
+                    continue;
+                }
+
+                if (requireGlobal && !shortcut.IsGlobal) {
+                    // I actually can't remember if this.FullPath should be used here or shortcut.FullPath
+                    if (shortcut.IsInherited && IsFocusPathInScope(this.FullPath, focus, true)) {
+                        if (!allowDuplicateInheritedShortcuts && FindPrimaryStroke(args.shortcuts, shortcut.Shortcut.PrimaryStroke)) {
+                            continue;
+                        }
                     }
+                    else {
+                        continue;
+                    }
+                }
+
+                if (!shortcut.Shortcut.IsEmpty && shortcut.Shortcut.IsPrimaryStroke(args.stroke)) {
+                    args.shortcuts.Add(shortcut);
+                }
+            }
+
+            foreach (GroupedInputState state in this.inputStates) {
+                if (state.ActivationStroke.Equals(args.stroke)) {
+                    args.inputStates.Add((state, true));
+                }
+                else if (state.DeactivationStroke.Equals(args.stroke)) {
+                    args.inputStates.Add((state, false));
                 }
             }
         }
 
-        private bool IsValidSearchForGroup(string focusedGroup) {
-            return IsValidSearchForGroup(this.FullPath, focusedGroup, this.InheritFromParent);
-        }
-
-        private static bool IsValidSearchForGroup(string path, string focused, bool inherit) {
+        private static bool IsFocusPathInScope(string path, string focused, bool inherit) {
             return path != null && focused != null && (inherit ? focused.StartsWith(path) : focused.Equals(path));
         }
 
@@ -163,6 +208,7 @@ namespace FocusGroupHotkeys.Core.Shortcuts.Managing {
         }
 
         public ShortcutGroup GetGroupByName(string name) {
+            ValidateName(name);
             return this.mapToItem.TryGetValue(name, out object value) ? value as ShortcutGroup : null;
         }
 
@@ -196,6 +242,7 @@ namespace FocusGroupHotkeys.Core.Shortcuts.Managing {
         }
 
         public GroupedShortcut GetShortcutByName(string name) {
+            ValidateName(name);
             return this.mapToItem.TryGetValue(name, out object value) ? value as GroupedShortcut : null;
         }
 
@@ -247,8 +294,12 @@ namespace FocusGroupHotkeys.Core.Shortcuts.Managing {
         private void ValidateNameNotInUse(string name) {
             if (this.mapToItem.ContainsKey(name)) {
                 string path = this.FullPath != null ? StringUtils.Join(this.FullPath, name, SeparatorChar) : name;
-                throw new Exception("Group or shortcut already exists with name: " + path);
+                throw new Exception($"Group or shortcut already exists with name: '{path}'");
             }
+        }
+
+        public override string ToString() {
+            return $"{nameof(ShortcutGroup)} ({this.FullPath ?? "<root>"}{(!string.IsNullOrWhiteSpace(this.DisplayName) ? $" \"{this.DisplayName}\"" : "")})";
         }
     }
 }

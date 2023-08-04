@@ -51,8 +51,7 @@ namespace FocusGroupHotkeys {
             this.P4Action1 = new RelayCommand(() => { this.IsP4Action1Checked = !this.IsP4Action1Checked; });
             this.P5Action1 = new RelayCommand(() => { this.IsP5Action1Checked = !this.IsP5Action1Checked; });
             this.P6Action1 = new RelayCommand(() => { this.IsP6Action1Checked = !this.IsP6Action1Checked; });
-            this.ShortcutManager = new ShortcutManagerViewModel();
-            this.ShortcutManager.LoadFromRoot(WPFShortcutManager.Instance.Root);
+            this.ShortcutManager = new ShortcutManagerViewModel(IoC.ShortcutManager);
         }
     }
 }

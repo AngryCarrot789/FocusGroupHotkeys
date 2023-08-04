@@ -22,7 +22,7 @@ namespace FocusGroupHotkeys.Core.Shortcuts {
 
         public bool IsMouse => true;
 
-        public bool IsEmpty => this.mouseStrokes.Count < 1;
+        public bool IsEmpty => this.mouseStrokes.Count <= 0;
 
         public bool HasSecondaryStrokes => this.mouseStrokes.Count > 1;
 

@@ -1,19 +1,26 @@
+using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Threading.Tasks;
-using FocusGroupHotkeys.Core.AdvancedContextService;
+using System.Windows.Input;
+using FocusGroupHotkeys.Core.Actions;
+using FocusGroupHotkeys.Core.Actions.Contexts;
 using FocusGroupHotkeys.Core.Shortcuts.Inputs;
 using FocusGroupHotkeys.Core.Shortcuts.Usage;
 
 namespace FocusGroupHotkeys.Core.Shortcuts.Managing {
     /// <summary>
-    /// A shortcut processor. This is used for each window, and should only really be used by a single thread at a time
+    /// A shortcut processor. This is used for each focus root (which is typically a window), and
+    /// should only really be used by a single thread at a time (not designed to be thread safe)
     /// <para>
-    /// This processor will  manages its own input strokes and active usages
+    /// This processor will manages its own input strokes and active usages
     /// </para>
     /// </summary>
     public class ShortcutProcessor {
-        private List<GroupedShortcut> shortcutList;
+        private readonly List<GroupedShortcut> cachedShortcutList;
+        private readonly List<(GroupedInputState, bool)> cachedInputStateList; // (InputState, shouldActivate)
+        private readonly List<GroupedShortcut> cachedInstantActivationList;
 
         /// <summary>
         /// A reference to the manager that created this processor
@@ -26,24 +33,37 @@ namespace FocusGroupHotkeys.Core.Shortcuts.Managing {
         public Dictionary<IShortcutUsage, GroupedShortcut> ActiveUsages { get; }
 
         /// <summary>
-        /// This processor's current data context for a focused element
+        /// This processor's current data context
         /// </summary>
-        public IHaveDataContext CurrentDataContext { get; set; }
+        public IDataContext CurrentDataContext { get; set; }
 
         public ShortcutProcessor(ShortcutManager manager) {
             this.Manager = manager;
             this.ActiveUsages = new Dictionary<IShortcutUsage, GroupedShortcut>();
-            this.shortcutList = new List<GroupedShortcut>(5);
+            this.cachedShortcutList = new List<GroupedShortcut>(8);
+            this.cachedInputStateList = new List<(GroupedInputState, bool)>();
+            this.cachedInstantActivationList = new List<GroupedShortcut>(4);
         }
 
-        protected virtual void AccumulateShortcuts(IInputStroke stroke, string focusedGroup) {
-            this.Manager.Root.CollectShortcutsWithPrimaryStroke(stroke, focusedGroup, this.shortcutList);
+        protected void AccumulateShortcuts(IInputStroke stroke, string focusedGroup, Predicate<GroupedShortcut> filter = null) {
+            GroupEvaulationArgs args = new GroupEvaulationArgs(stroke, this.cachedShortcutList, this.cachedInputStateList, filter);
+            this.Manager.DoRootEvaulateShortcutsAndInputStates(ref args, focusedGroup);
         }
 
-        protected virtual List<GroupedShortcut> GetInstantActivationShortcuts() {
-            List<GroupedShortcut> instantActivate = this.shortcutList.Where(x => !x.Shortcut.HasSecondaryStrokes).ToList();
-            this.shortcutList.RemoveAll(x => !x.Shortcut.HasSecondaryStrokes);
-            return instantActivate;
+        protected void AccumulateInstantActivationShortcuts() {
+            // List<GroupedShortcut> src = this.cachedShortcutList;
+            // int index = src.FindIndex(x => !x.Shortcut.HasSecondaryStrokes);
+            // if (index == -1)
+            //     return false;
+            // this.cachedInstantActivationList.Add(src[index]);
+            // src.RemoveAt(index);
+            // while ((index = src.FindIndex(index + 1, x => !x.Shortcut.HasSecondaryStrokes)) != -1) {
+            //     this.cachedInstantActivationList.Add(src[index]);
+            //     src.RemoveAt(index);
+            // }
+            // src.RemoveAll(x => !x.Shortcut.HasSecondaryStrokes);
+            this.cachedInstantActivationList.AddRange(this.cachedShortcutList.Where(x => !x.Shortcut.HasSecondaryStrokes));
+            this.cachedShortcutList.RemoveAll(x => !x.Shortcut.HasSecondaryStrokes);
         }
 
         protected virtual async Task<bool> OnUnexpectedCompletedUsage(IShortcutUsage usage, GroupedShortcut shortcut) {
@@ -51,24 +71,36 @@ namespace FocusGroupHotkeys.Core.Shortcuts.Managing {
                 return await this.OnSecondShortcutUsageCompleted(usage, shortcut);
             }
             finally {
+                // The OnKeyStroke/OnMouseStroke functions immediately return the return of OnUnexpectedCompletedUsage,
+                // so clearing this is safe to do
                 this.ActiveUsages.Clear();
             }
         }
 
-        public async Task<bool> OnKeyStroke(string focusedGroup, KeyStroke stroke) {
+        private static readonly Predicate<GroupedShortcut> RepeatedFilter = x => x.RepeatMode != RepeatMode.NonRepeat;
+        private static readonly Predicate<GroupedShortcut> NotRepeatedFilter = x => x.RepeatMode != RepeatMode.RepeatOnly;
+        private static readonly Predicate<GroupedShortcut> BlockAllFilter = x => false;
+
+        public async Task<bool> OnKeyStroke(string focusedGroup, KeyStroke stroke, bool isRepeat) {
             if (this.ActiveUsages.Count < 1) {
-                this.AccumulateShortcuts(stroke, focusedGroup);
-                if (this.shortcutList.Count < 1) {
+                this.AccumulateShortcuts(stroke, focusedGroup, isRepeat ? RepeatedFilter : NotRepeatedFilter);
+                await this.ProcessInputStates();
+                if (this.cachedShortcutList.Count < 1) {
                     return this.OnNoSuchShortcutForKeyStroke(focusedGroup, stroke);
                 }
 
                 bool result = false;
-                List<GroupedShortcut> instantActivate = this.GetInstantActivationShortcuts();
-                foreach (GroupedShortcut s in instantActivate) {
-                    result |= await this.OnShortcutActivated(s);
+                try {
+                    this.AccumulateInstantActivationShortcuts();
+                    foreach (GroupedShortcut s in this.cachedInstantActivationList) {
+                        result |= await this.ActivateShortcut(s);
+                    }
+                }
+                finally {
+                    this.cachedInstantActivationList.Clear();
                 }
 
-                if (this.shortcutList.Count < 1) {
+                if (this.cachedShortcutList.Count < 1) {
                     return result;
                 }
 
@@ -77,7 +109,7 @@ namespace FocusGroupHotkeys.Core.Shortcuts.Managing {
                 // In most cases, the list should only ever have 1 item with no secondary inputs, or be full of
                 // shortcuts that all have secondary inputs (because logically, that's how a key map should work...
                 // why would you want multiple shortcuts to activate on the same key stroke?)
-                foreach (GroupedShortcut mc in this.shortcutList) {
+                foreach (GroupedShortcut mc in this.cachedShortcutList) {
                     if (mc.Shortcut is IKeyboardShortcut shortcut) {
                         IKeyboardShortcutUsage usage = shortcut.CreateKeyUsage();
                         this.ActiveUsages[usage] = mc;
@@ -85,7 +117,7 @@ namespace FocusGroupHotkeys.Core.Shortcuts.Managing {
                     }
                 }
 
-                this.shortcutList.Clear();
+                this.cachedShortcutList.Clear();
                 if (this.ActiveUsages.Count > 0) {
                     return result | this.OnShortcutUsagesCreated();
                 }
@@ -162,21 +194,27 @@ namespace FocusGroupHotkeys.Core.Shortcuts.Managing {
         public async Task<bool> OnMouseStroke(string focusedGroup, MouseStroke stroke) {
             if (this.ActiveUsages.Count < 1) {
                 this.AccumulateShortcuts(stroke, focusedGroup);
-                if (this.shortcutList.Count < 1) {
+                await this.ProcessInputStates();
+                if (this.cachedShortcutList.Count < 1) {
                     return this.OnNoSuchShortcutForMouseStroke(focusedGroup, stroke);
                 }
 
                 bool result = false;
-                List<GroupedShortcut> instantActivate = this.GetInstantActivationShortcuts();
-                foreach (GroupedShortcut s in instantActivate) {
-                    result |= await this.OnShortcutActivated(s);
+                try {
+                    this.AccumulateInstantActivationShortcuts();
+                    foreach (GroupedShortcut s in this.cachedInstantActivationList) {
+                        result |= await this.ActivateShortcut(s);
+                    }
+                }
+                finally {
+                    this.cachedInstantActivationList.Clear();
                 }
 
-                if (this.shortcutList.Count < 1) {
+                if (this.cachedShortcutList.Count < 1) {
                     return result;
                 }
 
-                foreach (GroupedShortcut mc in this.shortcutList) {
+                foreach (GroupedShortcut mc in this.cachedShortcutList) {
                     if (mc.Shortcut is IMouseShortcut shortcut) {
                         IMouseShortcutUsage usage = shortcut.CreateMouseUsage();
                         this.ActiveUsages[usage] = mc;
@@ -184,7 +222,7 @@ namespace FocusGroupHotkeys.Core.Shortcuts.Managing {
                     }
                 }
 
-                this.shortcutList.Clear();
+                this.cachedShortcutList.Clear();
                 if (this.ActiveUsages.Count > 0) {
                     return result | this.OnShortcutUsagesCreated();
                 }
@@ -251,6 +289,46 @@ namespace FocusGroupHotkeys.Core.Shortcuts.Managing {
 
                     return this.OnSecondShortcutUsagesProgressed();
                 }
+            }
+        }
+
+        public async Task ProcessInputStatesForMouseUp(string focusedGroup, MouseStroke stroke) {
+            this.AccumulateShortcuts(stroke, focusedGroup, BlockAllFilter);
+            Debug.Assert(this.cachedShortcutList.Count == 0, "Expected the block all filter to work properly");
+            await this.ProcessInputStates();
+        }
+
+        private async Task ProcessInputStates() {
+            foreach ((GroupedInputState state, bool activate) in this.cachedInputStateList) {
+                if (activate) {
+                    if (state.IsActive) { // most likely repeated input from OS
+                        continue;
+                    }
+
+                    await this.OnInputStateTriggered(state, true);
+                }
+                else if (state.IsActive) {
+                    await this.OnInputStateTriggered(state, false);
+                }
+            }
+
+            this.cachedInputStateList.Clear();
+        }
+
+        /// <summary>
+        /// Called when an input state should be set to activated or deactivated
+        /// </summary>
+        /// <param name="input"></param>
+        /// <param name="isActive"></param>
+        /// <returns></returns>
+        protected virtual Task OnInputStateTriggered(GroupedInputState input, bool isActive) {
+            if (isActive) {
+                input.IsActive = true;
+                return input.OnActivate();
+            }
+            else {
+                input.IsActive = false;
+                return input.OnDeactivate();
             }
         }
 
@@ -332,31 +410,83 @@ namespace FocusGroupHotkeys.Core.Shortcuts.Managing {
         }
 
         /// <summary>
-        /// Called when a shortcut usage was completed. By default, this calls <see cref="OnShortcutActivated"/> to activate the shortcut
+        /// Called when a shortcut usage was completed. By default, this calls <see cref="ActivateShortcut"/> to activate the shortcut
         /// </summary>
         /// <param name="usage">The usage that was completed</param>
         /// <param name="shortcut">The managed shortcut that created the usage</param>
         /// <returns>The mouse stroke event outcome. True = Handled/Cancelled, False = Ignored/Continue</returns>
         public virtual Task<bool> OnSecondShortcutUsageCompleted(IShortcutUsage usage, GroupedShortcut shortcut) {
-            return this.OnShortcutActivated(shortcut);
+            return this.ActivateShortcut(shortcut);
         }
 
         /// <summary>
         /// Called when a shortcut wants to be activated (either the usage chain was complete, or the primary input was pressed and there were no secondary inputs)
         /// </summary>
         /// <returns>The mouse stroke event outcome. True = Handled/Cancelled, False = Ignored/Continue</returns>
-        public virtual Task<bool> OnShortcutActivated(GroupedShortcut shortcut) {
-            return Task.FromResult(true);
+        public virtual async Task<bool> ActivateShortcut(GroupedShortcut shortcut) {
+            IDataContext context = this.CurrentDataContext;
+            if (context == null) {
+                return false;
+            }
+
+            foreach (object obj in context.Context) {
+                if (obj is IShortcutHandler handler && await handler.OnShortcutActivated(this, shortcut)) {
+                    return true;
+                }
+                else if (obj is IShortcutToCommand converter) {
+                    ICommand command = converter.GetCommandForShortcut(shortcut.FullPath);
+                    if (command is BaseAsyncRelayCommand asyncCommand) {
+                        IoC.BroadcastShortcutActivity($"Activating shortcut: {shortcut} via command...");
+                        if (await asyncCommand.TryExecuteAsync(null)) {
+                            IoC.BroadcastShortcutActivity($"Activating shortcut: {shortcut} via command... Complete!");
+                            return true;
+                        }
+                    }
+                    else if (command != null && command.CanExecute(null)) {
+                        IoC.BroadcastShortcutActivity($"Activated shortcut: {shortcut} via command... Complete!");
+                        command.Execute(null);
+                        return true;
+                    }
+                }
+            }
+
+            if (string.IsNullOrWhiteSpace(shortcut.ActionId)) {
+                return false;
+            }
+
+            if (shortcut.ActionContext != null) {
+                DataContext newCtx = new DataContext();
+                newCtx.Merge(context);
+                newCtx.Merge(shortcut.ActionContext);
+                context = newCtx;
+            }
+
+            IoC.BroadcastShortcutActivity($"Activating shortcut action: {shortcut} -> {shortcut.ActionId}...");
+            if (await ActionManager.Instance.Execute(shortcut.ActionId, context)) {
+                IoC.BroadcastShortcutActivity($"Activating shortcut action: {shortcut} -> {shortcut.ActionId}... Complete!");
+                return true;
+            }
+
+            IoC.BroadcastShortcutActivity($"Activating shortcut action: {shortcut} -> {shortcut.ActionId}... Incomplete!");
+            return false;
         }
 
-        protected virtual bool ShouldIgnoreKeyStroke(IKeyboardShortcutUsage usage, GroupedShortcut shortcut, KeyStroke input, KeyStroke currentKeyStroke) {
-            if (currentKeyStroke.IsKeyRelease && !input.IsKeyRelease) {
+        /// <summary>
+        /// Whether to ignore the received key stroke
+        /// </summary>
+        /// <param name="usage"></param>
+        /// <param name="shortcut"></param>
+        /// <param name="input"></param>
+        /// <param name="currentUsageKeyStroke"></param>
+        /// <returns></returns>
+        protected virtual bool ShouldIgnoreKeyStroke(IKeyboardShortcutUsage usage, GroupedShortcut shortcut, KeyStroke input, KeyStroke currentUsageKeyStroke) {
+            if (currentUsageKeyStroke.IsRelease && !input.IsRelease) {
                 if (this.ShouldIgnorePressWhenRequiredStrokeIsRelease(usage, shortcut, input)) {
                     return true;
                 }
             }
 
-            if (input.IsKeyRelease && !usage.IsCompleted && !currentKeyStroke.IsKeyRelease) {
+            if (input.IsRelease && !usage.IsCompleted && !currentUsageKeyStroke.IsRelease) {
                 if (this.ShouldIgnoreReleaseWhenRequiredStrokeIsPress(usage, shortcut, input)) {
                     return true;
                 }
@@ -366,7 +496,7 @@ namespace FocusGroupHotkeys.Core.Shortcuts.Managing {
         }
 
         /// <summary>
-        /// Ignores the received key stroke when it is a key down stroke, but the usage requires a key release. By default,
+        /// Whether to ignore the received key stroke when it is a key down stroke, but the usage requires a key release. By default,
         /// this returns true. This is just for finer control over the behaviour that allows the key release to be used
         /// </summary>
         /// <param name="usage">The usage being checked</param>
@@ -378,7 +508,7 @@ namespace FocusGroupHotkeys.Core.Shortcuts.Managing {
         }
 
         /// <summary>
-        /// Ignores the received key stroke when it is a key up stroke, but the usage requires a key press. By default,
+        /// Whether to ignore the received key stroke when it is a key up stroke, but the usage requires a key press. By default,
         /// this returns true. This is just for finer control over the behaviour that allows the key release to be used
         /// </summary>
         /// <param name="usage">The usage being checked</param>

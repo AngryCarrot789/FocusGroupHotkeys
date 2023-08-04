@@ -41,7 +41,7 @@ namespace FocusGroupHotkeys.Shortcuts {
         }
 
         public static MouseStroke GetMouseStrokeForEvent(MouseButtonEventArgs e) {
-            return new MouseStroke((int) e.ChangedButton, (int) Keyboard.Modifiers, e.ClickCount);
+            return new MouseStroke((int) e.ChangedButton, (int) Keyboard.Modifiers, e.ButtonState == MouseButtonState.Released, e.ClickCount);
         }
 
         public static bool GetMouseStrokeForEvent(MouseWheelEventArgs e, out MouseStroke stroke) {
@@ -57,13 +57,13 @@ namespace FocusGroupHotkeys.Shortcuts {
                 return false;
             }
 
-            stroke = new MouseStroke(button, (int) Keyboard.Modifiers, 0, e.Delta);
+            stroke = new MouseStroke(button, (int) Keyboard.Modifiers, false, 0, e.Delta);
             return true;
         }
 
         public static void EnforceIdFormat(string id, string paramName) {
             if (string.IsNullOrWhiteSpace(id)) {
-                throw new Exception($"{paramName} cannot be null or consist of whitespaces only");
+                throw new Exception($"{paramName} cannot be null/empty or consist of whitespaces only");
             }
         }
 

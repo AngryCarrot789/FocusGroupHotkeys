@@ -3,17 +3,12 @@ using System.Collections.ObjectModel;
 using System.Linq;
 using System.Windows.Input;
 using FocusGroupHotkeys.Core.AdvancedContextService;
-using FocusGroupHotkeys.Core.AdvancedContextService.Base;
 using FocusGroupHotkeys.Core.Shortcuts.Inputs;
 using FocusGroupHotkeys.Core.Shortcuts.Managing;
 
 namespace FocusGroupHotkeys.Core.Shortcuts.ViewModels {
-    public class ShortcutViewModel : BaseViewModel, IContextProvider {
-        public GroupedShortcut ShortcutRefernce { get; set; }
-
-        public ShortcutManagerViewModel Manager { get; set; }
-
-        public ShortcutGroupViewModel Parent { get; }
+    public class ShortcutViewModel : BaseShortcutItemViewModel, IContextProvider {
+        public GroupedShortcut TheShortcut { get; }
 
         public ObservableCollection<InputStrokeViewModel> InputStrokes { get; }
 
@@ -31,40 +26,51 @@ namespace FocusGroupHotkeys.Core.Shortcuts.ViewModels {
             set => this.RaisePropertyChanged(ref this.isGlobal, value);
         }
 
+        private bool inherit;
+        public bool Inherit {
+            get => this.inherit;
+            set => this.RaisePropertyChanged(ref this.inherit, value);
+        }
+
+        private RepeatMode repeatMode;
+        public RepeatMode RepeatMode {
+            get => this.repeatMode;
+            set => this.RaisePropertyChanged(ref this.repeatMode, value);
+        }
+
         public ICommand AddKeyStrokeCommand { get; set; }
 
         public ICommand AddMouseStrokeCommand { get; set; }
 
         public RelayCommand<InputStrokeViewModel> RemoveStrokeCommand { get; }
 
-        public ShortcutViewModel(ShortcutGroupViewModel parent, GroupedShortcut reference) {
-            this.ShortcutRefernce = reference;
-            this.Parent = parent;
+        public ShortcutViewModel(ShortcutManagerViewModel manager, ShortcutGroupViewModel parent, GroupedShortcut reference) : base(manager, parent) {
+            this.TheShortcut = reference;
             this.Name = reference.Name;
             this.DisplayName = reference.DisplayName ?? reference.Name;
-            this.Path = reference.Path;
+            this.Path = reference.FullPath;
             this.Description = reference.Description;
             this.isGlobal = reference.IsGlobal;
+            this.inherit = reference.IsInherited;
+            this.repeatMode = reference.RepeatMode;
             this.InputStrokes = new ObservableCollection<InputStrokeViewModel>();
             this.AddKeyStrokeCommand = new RelayCommand(this.AddKeyStrokeAction);
             this.AddMouseStrokeCommand = new RelayCommand(this.AddMouseStrokeAction);
-            this.RemoveStrokeCommand = new RelayCommand<InputStrokeViewModel>(this.RemoveStrokeAction);
+            this.RemoveStrokeCommand = new RelayCommand<InputStrokeViewModel>(this.RemoveStrokeAction, (x) => x != null);
             foreach (IInputStroke stroke in reference.Shortcut.InputStrokes) {
                 this.InputStrokes.Add(InputStrokeViewModel.CreateFrom(stroke));
             }
         }
 
-        public List<IContextEntry> GetContext(List<IContextEntry> list) {
+        public void GetContext(List<IContextEntry> list) {
             list.Add(new CommandContextEntry("Add key stroke...", this.AddKeyStrokeCommand));
             list.Add(new CommandContextEntry("Add mouse stroke...", this.AddMouseStrokeCommand));
             if (this.InputStrokes.Count > 0) {
-                list.Add(ContextEntrySeparator.Instance);
+                list.Add(SeparatorEntry.Instance);
                 foreach (InputStrokeViewModel stroke in this.InputStrokes) {
                     list.Add(new CommandContextEntry("Remove " + stroke.ToReadableString(), this.RemoveStrokeCommand, stroke));
                 }
             }
-
-            return list;
         }
 
         public void AddKeyStrokeAction() {
@@ -84,42 +90,30 @@ namespace FocusGroupHotkeys.Core.Shortcuts.ViewModels {
         }
 
         public void UpdateShortcutReference() {
-            // if (this.Manager != null) {
-            //     // IoC.ShortcutManager.Root = this.Manager.SaveToRoot();
-            // }
-
-            if (this.ShortcutRefernce != null) {
-                this.ShortcutRefernce.SetShortcut(this.SaveToRealShortcut() ?? KeyboardShortcut.EmptyKeyboardShortcut);
-                IoC.OnShortcutManagedChanged?.Invoke(this.Path);
-            }
+            IShortcut shortcut = this.TheShortcut.Shortcut;
+            this.TheShortcut.Shortcut = this.SaveToRealShortcut() ?? KeyboardShortcut.EmptyKeyboardShortcut;
+            this.Manager.OnShortcutModified(this, shortcut);
         }
 
         public void RemoveStrokeAction(InputStrokeViewModel stroke) {
-            this.InputStrokes.Remove(stroke);
-            this.UpdateShortcutReference();
+            if (this.InputStrokes.Remove(stroke)) {
+                this.UpdateShortcutReference();
+            }
         }
 
         public IShortcut SaveToRealShortcut() {
-            bool hasKey = false;
-            bool hasMouse = false;
-            if (this.InputStrokes.Count(x => x is KeyStrokeViewModel) > 0) {
-                hasKey = true;
-            }
-
-            if (this.InputStrokes.Count(x => x is MouseStrokeViewModel) > 0) {
-                hasMouse = true;
-            }
-
+            bool hasKey = this.InputStrokes.Any(x => x is KeyStrokeViewModel);
+            bool hasMouse = this.InputStrokes.Any(x => x is MouseStrokeViewModel);
             // These 3 different shortcut types only really exist for a performance reason. You can
             // always fall back to MouseKeyboardShortcut, and just ignore the other types
             if (hasKey && hasMouse) {
                 return new MouseKeyboardShortcut(this.InputStrokes.Select(a => a.ToInputStroke()));
             }
             else if (hasKey) {
-                return new KeyboardShortcut(this.InputStrokes.OfType<KeyStrokeViewModel>().Select(a => a.ToKeyStroke()));
+                return new KeyboardShortcut(this.InputStrokes.Select(a => ((KeyStrokeViewModel) a).ToKeyStroke()));
             }
             else if (hasMouse) {
-                return new MouseShortcut(this.InputStrokes.OfType<MouseStrokeViewModel>().Select(a => a.ToMouseStroke()));
+                return new MouseShortcut(this.InputStrokes.Select(a => ((MouseStrokeViewModel) a).ToMouseStroke()));
             }
             else {
                 return null;

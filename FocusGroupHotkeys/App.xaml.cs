@@ -9,6 +9,7 @@ using FocusGroupHotkeys.Core;
 using FocusGroupHotkeys.Core.Services;
 using FocusGroupHotkeys.Core.Shortcuts.Managing;
 using FocusGroupHotkeys.Core.Shortcuts.ViewModels;
+using FocusGroupHotkeys.Resources.I18N;
 using FocusGroupHotkeys.Shortcuts;
 using FocusGroupHotkeys.Shortcuts.Dialogs;
 using FocusGroupHotkeys.Shortcuts.Views;
@@ -27,7 +28,7 @@ namespace FocusGroupHotkeys {
             }
 
             foreach (GroupedShortcut shortcut in group.Shortcuts) {
-                UpdatePath(dictionary, shortcut.Path);
+                UpdatePath(dictionary, shortcut.FullPath);
             }
         }
 
@@ -47,17 +48,22 @@ namespace FocusGroupHotkeys {
             InputStrokeViewModel.MouseToReadableString = MouseStrokeRepresentationConverter.ToStringFunction;
             IoC.KeyboardDialogs = new KeyboardDialogService();
             IoC.MouseDialogs = new MouseDialogService();
-            IoC.ShortcutManager = WPFShortcutManager.Instance;
+            IoC.ShortcutManager = ShortcutManager.Instance = new WPFShortcutManager();
+            IoC.Translator = new WPFDictionaryTranslator();
+            LocalizationController.SetLang(LangType.En);
+
             IoC.OnShortcutManagedChanged = (x) => {
                 if (!string.IsNullOrWhiteSpace(x)) {
                     UpdatePath(this.Resources, x);
                 }
             };
 
-            const string path = @"F:\VSProjsV2\FocusGroupHotkeys\FocusGroupHotkeys\SomeXML.xml";
-            using (Stream stream = File.OpenRead(path)) {
-                ShortcutGroup result = WPFKeyMapDeserialiser.Instance.Deserialise(stream);
-                WPFShortcutManager.Instance.SetRoot(result);
+            string keymapFilePath = Path.GetFullPath(@"Keymap.xml");
+            if (File.Exists(keymapFilePath)) {
+                using (FileStream stream = File.OpenRead(keymapFilePath)) {
+                    ShortcutGroup group = WPFKeyMapSerialiser.Instance.Deserialise(stream);
+                    WPFShortcutManager.WPFInstance.SetRoot(group);
+                }
             }
 
             // try {

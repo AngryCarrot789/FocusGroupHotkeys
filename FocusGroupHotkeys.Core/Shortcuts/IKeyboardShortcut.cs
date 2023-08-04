@@ -3,6 +3,9 @@ using FocusGroupHotkeys.Core.Shortcuts.Inputs;
 using FocusGroupHotkeys.Core.Shortcuts.Usage;
 
 namespace FocusGroupHotkeys.Core.Shortcuts {
+    /// <summary>
+    /// An interface for shortcuts that accept keyboard inputs
+    /// </summary>
     public interface IKeyboardShortcut : IShortcut {
         /// <summary>
         /// All of the Key Strokes that this shortcut contains

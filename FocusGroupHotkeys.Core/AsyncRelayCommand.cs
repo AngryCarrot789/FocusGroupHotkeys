@@ -1,21 +1,13 @@
 using System;
-using System.Threading;
 using System.Threading.Tasks;
 
 namespace FocusGroupHotkeys.Core {
     /// <summary>
-    /// A simple relay command, which does not take any parameters
+    /// A simple async relay command, which does not take any parameters
     /// </summary>
-    public class AsyncRelayCommand : BaseRelayCommand {
+    public class AsyncRelayCommand : BaseAsyncRelayCommand {
         private readonly Func<Task> execute;
         private readonly Func<bool> canExecute;
-
-        /// <summary>
-        /// Because <see cref="Execute"/> is async void, it can be fired multiple
-        /// times while the task that <see cref="execute"/> returns is still running. This
-        /// is used to track if it's running or not
-        /// </summary>
-        private volatile int isRunningState; // maybe switch to atomic Interlocked?
 
         public AsyncRelayCommand(Func<Task> execute, Func<bool> canExecute = null) {
             if (execute == null) {
@@ -26,44 +18,29 @@ namespace FocusGroupHotkeys.Core {
             this.canExecute = canExecute;
         }
 
-        public override bool CanExecute(object parameter) {
-            return this.isRunningState == 0 && base.CanExecute(parameter) && (this.canExecute == null || this.canExecute());
+        protected override bool CanExecuteCore(object parameter) {
+            return this.canExecute == null || this.canExecute();
         }
 
-        public override async void Execute(object parameter) {
-            if (this.isRunningState == 1) {
-                return;
-            }
-
-            await this.ExecuteAsync();
-        }
-
-        public async Task ExecuteAsync() {
-            if (Interlocked.CompareExchange(ref this.isRunningState, 1, 0) == 1) {
-                return;
-            }
-
-            this.RaiseCanExecuteChanged();
-
-            try {
-                await this.execute();
-            }
-            finally {
-                this.isRunningState = 0;
-            }
-
-            this.RaiseCanExecuteChanged();
+        protected override Task ExecuteCoreAsync(object parameter) {
+            return this.execute();
         }
     }
 
-    public class AsyncRelayCommand<T> : BaseRelayCommand {
+    /// <summary>
+    /// A simple async relay command, which may take a parameter
+    /// </summary>
+    /// <typeparam name="T">The type of parameter</typeparam>
+    public class AsyncRelayCommand<T> : BaseAsyncRelayCommand {
         private readonly Func<T, Task> execute;
         private readonly Func<T, bool> canExecute;
-        private volatile int isRunningState;
 
+        /// <summary>
+        /// Whether or not to convert the parameter to <see cref="T"/> (e.g. if T is a boolean and the parameter is a string, it is easily convertible)
+        /// </summary>
         public bool ConvertParameter { get; set; }
 
-        public AsyncRelayCommand(Func<T, Task> execute, Func<T, bool> canExecute = null, bool convertParameter = false) {
+        public AsyncRelayCommand(Func<T, Task> execute, Func<T, bool> canExecute = null, bool convertParameter = true) {
             if (execute == null) {
                 throw new ArgumentNullException(nameof(execute), "Execute callback cannot be null");
             }
@@ -73,37 +50,30 @@ namespace FocusGroupHotkeys.Core {
             this.ConvertParameter = convertParameter;
         }
 
-        public override bool CanExecute(object parameter) {
-            if (this.isRunningState == 1) {
-                return false;
-            }
-
+        protected override bool CanExecuteCore(object parameter) {
             if (this.ConvertParameter) {
                 parameter = GetConvertedParameter<T>(parameter);
             }
 
-            return base.CanExecute(parameter) && (parameter == null || parameter is T) && this.canExecute((T) parameter);
+            return this.canExecute == null ||
+                   parameter == null && this.canExecute(default) ||
+                   parameter is T t && this.canExecute(t);
         }
 
-        public override async void Execute(object parameter) {
-            if (Interlocked.CompareExchange(ref this.isRunningState, 1, 0) == 1) {
-                return;
-            }
-
+        protected override Task ExecuteCoreAsync(object parameter) {
             if (this.ConvertParameter) {
                 parameter = GetConvertedParameter<T>(parameter);
             }
 
-            this.RaiseCanExecuteChanged();
-
-            try {
-                await this.execute((T) parameter);
+            if (parameter == null) {
+                return this.execute(default);
             }
-            finally {
-                this.isRunningState = 0;
+            else if (parameter is T value) {
+                return this.execute(value);
             }
-
-            this.RaiseCanExecuteChanged();
+            else {
+                return Task.CompletedTask;
+            }
         }
     }
 }

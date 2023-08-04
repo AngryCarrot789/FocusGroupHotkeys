@@ -5,14 +5,10 @@ using FocusGroupHotkeys.Core.Shortcuts.Managing;
 using FocusGroupHotkeys.Core.Utils;
 
 namespace FocusGroupHotkeys.Core.Shortcuts.ViewModels {
-    public class ShortcutGroupViewModel : BaseViewModel {
-        private readonly EfficientObservableCollection<object> children;
+    public class ShortcutGroupViewModel : BaseShortcutItemViewModel {
+        private readonly ObservableCollectionEx<BaseShortcutItemViewModel> children;
 
-        public ShortcutManagerViewModel Manager { get; set; }
-
-        public ShortcutGroup GroupReference { get; set; }
-
-        public ShortcutGroupViewModel Parent { get; }
+        public ShortcutGroup TheGroup { get; set; }
 
         public string FullPath { get; }
 
@@ -24,32 +20,28 @@ namespace FocusGroupHotkeys.Core.Shortcuts.ViewModels {
 
         public bool InheritFromParent { get; }
 
-        public ReadOnlyObservableCollection<object> Children { get; }
+        public ReadOnlyObservableCollection<BaseShortcutItemViewModel> Children { get; }
 
-        public ShortcutGroupViewModel(ShortcutGroupViewModel parent, ShortcutGroup reference) {
-            this.Parent = parent;
-            this.GroupReference = reference;
+        public ShortcutGroupViewModel(ShortcutManagerViewModel manager, ShortcutGroupViewModel parent, ShortcutGroup reference) : base(manager, parent) {
+            this.TheGroup = reference;
             this.IsGlobal = reference.IsGlobal;
-            this.InheritFromParent = reference.InheritFromParent;
+            this.InheritFromParent = reference.Inherit;
             this.Name = reference.Name;
             this.DisplayName = reference.DisplayName ?? reference.Name;
             this.FullPath = reference.FullPath;
-            this.children = new EfficientObservableCollection<object>();
-            this.Children = new ReadOnlyObservableCollection<object>(this.children);
+            this.children = new ObservableCollectionEx<BaseShortcutItemViewModel>();
+            this.Children = new ReadOnlyObservableCollection<BaseShortcutItemViewModel>(this.children);
         }
 
         public static ShortcutGroupViewModel CreateFrom(ShortcutManagerViewModel manager, ShortcutGroupViewModel parent, ShortcutGroup reference) {
-            ShortcutGroupViewModel groupViewModel = new ShortcutGroupViewModel(parent, reference) {
-                Manager = manager
-            };
-
-            groupViewModel.AddItems(reference.Groups.Select(x => CreateFrom(manager, groupViewModel, x)));
-            groupViewModel.AddItems(reference.Shortcuts.Select(x => new ShortcutViewModel(groupViewModel, x) { Manager = manager }));
-            return groupViewModel;
+            ShortcutGroupViewModel group = new ShortcutGroupViewModel(manager, parent, reference);
+            group.AddItems(reference.Groups.Select(x => CreateFrom(manager, group, x)));
+            group.AddItems(reference.Shortcuts.Select(x => new ShortcutViewModel(manager, group, x)));
+            return group;
         }
 
         public ShortcutGroup SaveToRealGroup() {
-            ShortcutGroup group = new ShortcutGroup(this.Parent?.GroupReference, this.FullPath, this.IsGlobal, this.InheritFromParent);
+            ShortcutGroup group = new ShortcutGroup(this.Parent?.TheGroup, this.FullPath, this.IsGlobal, this.InheritFromParent);
             foreach (ShortcutGroupViewModel innerGroup in this.children.OfType<ShortcutGroupViewModel>()) {
                 group.AddGroup(innerGroup.SaveToRealGroup());
             }
@@ -58,6 +50,8 @@ namespace FocusGroupHotkeys.Core.Shortcuts.ViewModels {
                 IShortcut realShortcut = shortcut.SaveToRealShortcut();
                 if (realShortcut != null) {
                     GroupedShortcut managed = group.AddShortcut(shortcut.Name, realShortcut, shortcut.IsGlobal);
+                    managed.RepeatMode = shortcut.RepeatMode;
+                    managed.IsInherited = shortcut.Inherit;
                     managed.Description = shortcut.Description;
                 }
             }

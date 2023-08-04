@@ -13,9 +13,9 @@ namespace FocusGroupHotkeys.Core.Shortcuts.Usage {
 
         public IMouseShortcut MouseShortcut => this.shortcut;
 
-        public KeyStroke CurrentKeyStroke => this.currentStroke.Value is KeyStroke value ? value : default;
+        public KeyStroke CurrentKeyStroke => this.currentStroke?.Value is KeyStroke value ? value : default;
 
-        public MouseStroke CurrentMouseStroke => this.currentStroke.Value is MouseStroke value ? value : default;
+        public MouseStroke CurrentMouseStroke => this.currentStroke?.Value is MouseStroke value ? value : default;
 
         public IShortcut Shortcut {
             get => this.KeyboardShortcut;
@@ -66,8 +66,7 @@ namespace FocusGroupHotkeys.Core.Shortcuts.Usage {
             if (this.currentStroke == null) {
                 return true;
             }
-
-            if (stroke.Equals(this.currentStroke.Value)) {
+            else if (stroke.Equals(this.currentStroke.Value)) {
                 this.ProgressCurrentStroke();
                 return true;
             }

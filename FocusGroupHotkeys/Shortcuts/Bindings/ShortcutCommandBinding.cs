@@ -1,84 +1,63 @@
-using System.Threading.Tasks;
+using System;
+using System.ComponentModel;
 using System.Windows;
 using System.Windows.Input;
-using FocusGroupHotkeys.Core;
-using FocusGroupHotkeys.Core.Shortcuts.Managing;
 
 namespace FocusGroupHotkeys.Shortcuts.Bindings {
-    public class ShortcutCommandBinding : InputBinding {
-        public static readonly DependencyProperty ShortcutAndUsageIdProperty =
-            DependencyProperty.Register(
-                "ShortcutAndUsageId",
-                typeof(string),
-                typeof(ShortcutCommandBinding),
-                new PropertyMetadata(null, (d, e) => ((ShortcutCommandBinding) d).OnShouldcutAndUsageIdChanged((string) e.OldValue, (string) e.NewValue)));
+    /// <summary>
+    /// An input binding that is triggered by a shortcut. <see cref="InputBinding.Gesture"/> is unused
+    /// </summary>
+    public class ShortcutCommandBinding : Freezable {
+        public static readonly DependencyProperty CommandProperty = InputBinding.CommandProperty.AddOwner(typeof(ShortcutCommandBinding));
+        public static readonly DependencyProperty CommandParameterProperty = InputBinding.CommandParameterProperty.AddOwner(typeof(ShortcutCommandBinding));
+        public static readonly DependencyProperty ShortcutPathProperty = DependencyProperty.Register(nameof(ShortcutPath), typeof(string), typeof(ShortcutCommandBinding));
+        public static readonly DependencyProperty AllowChainExecutionProperty = DependencyProperty.Register("AllowChainExecution", typeof(bool), typeof(ShortcutCommandBinding), new PropertyMetadata(BoolBox.False));
 
         /// <summary>
-        /// <para>
-        /// The target shortcut and the usage id as a single string (cannot be two properties due to the <see cref="InputBinding"/> limitations,
-        /// such as the lack of an Loaded or AddedToVisualTree event/function).
-        /// </para>
-        /// <para>
-        /// The ShortcutID and UsageID are separated by a colon ':' character. The UsageID is optional, so you can just set this as the ShortcutID.
-        /// A UsageID is only nessesary if you plan on using the same shortcut to invoke code in multiple places, so that only the right callback gets fired
-        /// </para>
-        /// <para>
-        /// Examples: "Path/To/My/Shortcut:UsageID", "My/Action"
-        /// </para>
+        /// The command to execute when the shortcut is activated
         /// </summary>
-        public string ShortcutAndUsageId {
-            get => (string) this.GetValue(ShortcutAndUsageIdProperty);
-            set => this.SetValue(ShortcutAndUsageIdProperty, value);
+        [Localizability(LocalizationCategory.NeverLocalize)]
+        [TypeConverter("System.Windows.Input.CommandConverter, PresentationFramework, Version=4.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, Custom=null")]
+        public ICommand Command {
+            get => (ICommand) this.GetValue(CommandProperty);
+            set => this.SetValue(CommandProperty, value);
         }
 
-        public string ShortcutId {
-            get {
-                ShortcutUtils.SplitValue(this.ShortcutAndUsageId, out string id, out _);
-                return id;
-            }
+        /// <summary>
+        /// The parameter to pass to the command
+        /// </summary>
+        public object CommandParameter {
+            get => this.GetValue(CommandParameterProperty);
+            set => this.SetValue(CommandParameterProperty, value);
         }
 
-        public string UsageId {
-            get {
-                ShortcutUtils.SplitValue(this.ShortcutAndUsageId, out _, out string id);
-                return id;
-            }
+        /// <summary>
+        /// The full path of the shortcut that must be activated in order for this binding's command to be executed
+        /// </summary>
+        public string ShortcutPath {
+            get => (string) this.GetValue(ShortcutPathProperty);
+            set => this.SetValue(ShortcutPathProperty, value);
         }
 
-        private readonly ShortcutActivateHandler onShortcutFired;
+        /// <summary>
+        /// If there is more than 1 command triggered by the same <see cref="ShortcutPath"/> in the same collection, this determines
+        /// whether or not the current instance can be executed if one of those commands have already been executed. False by default,
+        /// as the first command should be the last, and no more commands should be executed
+        /// </summary>
+        public bool AllowChainExecution {
+            get => (bool) this.GetValue(AllowChainExecutionProperty);
+            set => this.SetValue(AllowChainExecutionProperty, value.Box());
+        }
 
         public ShortcutCommandBinding() {
-            this.onShortcutFired = this.OnShortcutFired;
+
         }
 
-        private void OnShouldcutAndUsageIdChanged(string oldId, string newId) {
-            if (!string.IsNullOrWhiteSpace(oldId)) {
-                ShortcutUtils.SplitValue(oldId, out string shortcutId, out string usageId);
-                WPFShortcutManager.UnregisterHandler(shortcutId, usageId);
-            }
-
-            if (!string.IsNullOrWhiteSpace(newId)) {
-                ShortcutUtils.SplitValue(newId, out string shortcutId, out string usageId);
-                WPFShortcutManager.RegisterHandler(shortcutId, usageId, this.onShortcutFired);
-            }
-        }
-
-        private async Task<bool> OnShortcutFired(ShortcutProcessor processor, GroupedShortcut shortcut) {
-            ICommand cmd = this.Command;
-            object param = this.CommandParameter;
-            if (cmd != null && cmd.CanExecute(param)) {
-                if (cmd is AsyncRelayCommand arc) {
-                    await arc.ExecuteAsync();
-                    return true;
-                }
-                else {
-                    cmd.Execute(param);
-                    return true;
-                }
-            }
-            else {
-                return false;
-            }
+        public ShortcutCommandBinding(string shortcutPath, ICommand command) {
+            if (string.IsNullOrWhiteSpace(shortcutPath))
+                throw new ArgumentException("Shortcut ID must not be null, empty or consist of only whitespaces", nameof(shortcutPath));
+            this.ShortcutPath = shortcutPath;
+            this.Command = command;
         }
 
         protected override Freezable CreateInstanceCore() => new ShortcutCommandBinding();

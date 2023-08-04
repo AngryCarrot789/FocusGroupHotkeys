@@ -50,7 +50,12 @@ namespace FocusGroupHotkeys.Core {
             set => Instance.Register(value ?? throw new ArgumentNullException(nameof(value), "Value cannot be null"));
         }
 
-        public static Action<string> OnShortcutManagedChanged { get; set; }
-        public static Action<string> BroadcastShortcutActivity { get; set; }
+        public static ITranslator Translator {
+            get => Instance.Provide<ITranslator>();
+            set => Instance.Register(value ?? throw new ArgumentNullException(nameof(value), "Value cannot be null"));
+        }
+
+        public static Action<string> OnShortcutManagedChanged { get; set; } = (x) => {};
+        public static Action<string> BroadcastShortcutActivity { get; set; } = (x) => {};
     }
 }

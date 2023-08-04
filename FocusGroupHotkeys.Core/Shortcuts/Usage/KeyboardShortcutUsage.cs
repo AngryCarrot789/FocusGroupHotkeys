@@ -4,6 +4,7 @@ using FocusGroupHotkeys.Core.Shortcuts.Inputs;
 namespace FocusGroupHotkeys.Core.Shortcuts.Usage {
     public class KeyboardShortcutUsage : IKeyboardShortcutUsage {
         private LinkedListNode<KeyStroke> currentStroke;
+        private LinkedListNode<KeyStroke> previousStroke;
 
         public IKeyboardShortcut KeyboardShortcut { get; }
 

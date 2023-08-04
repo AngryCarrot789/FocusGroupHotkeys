@@ -3,8 +3,8 @@ using System.Windows.Input;
 
 namespace FocusGroupHotkeys.Core {
     /// <summary>
-    /// A base relay command class, that implements ICommand, and also has a simple
-    /// implementation for dealing with the <see cref="CanExecuteChanged"/> event handler
+    /// A base relay command class, that implements ICommand, and also has a simple implementation for dealing with
+    /// the <see cref="CanExecuteChanged"/> event handler (via <see cref="RaiseCanExecuteChanged"/>)
     /// </summary>
     public abstract class BaseRelayCommand : ICommand {
         private bool isEnabled;
@@ -27,18 +27,6 @@ namespace FocusGroupHotkeys.Core {
         /// <param name="canExecute">The execution status logic</param>
         protected BaseRelayCommand() {
             this.isEnabled = true;
-        }
-
-        protected static object GetConvertedParameter<T>(object value) {
-            if (value is IConvertible convertible) {
-                return convertible.ToType(typeof(T), null);
-            }
-            else if (value == null) {
-                return default(T);
-            }
-            else {
-                throw new Exception("Parameter is not convertable: " + value);
-            }
         }
 
         public abstract void Execute(object parameter);
@@ -65,7 +53,27 @@ namespace FocusGroupHotkeys.Core {
         /// </para>
         /// </summary>
         public virtual void RaiseCanExecuteChanged() {
-            this.CanExecuteChanged?.Invoke(this, EventArgs.Empty);
+            if (this.CanExecuteChanged != null) {
+                IoC.Dispatcher.Invoke(() => {
+                    this.CanExecuteChanged?.Invoke(this, EventArgs.Empty);
+                });
+            }
+        }
+
+        /// <summary>
+        /// A helper function for converting a command parameter to a generic type. This will return null if the parameter is null
+        /// </summary>
+        /// <param name="value">Input value/Command Parameter</param>
+        /// <typeparam name="T">The type to convert the value to</typeparam>
+        /// <returns>An object which is an instance of T</returns>
+        /// <exception cref="Exception">The value is not null and could not be converted to T</exception>
+        protected static object GetConvertedParameter<T>(object value) {
+            switch (value) {
+                case null: return null;
+                case T _: return value;
+                case IConvertible c: return c.ToType(typeof(T), null);
+                default: throw new Exception($"Parameter (of type {value.GetType()}) could not be converted to {typeof(T)}");
+            }
         }
     }
 }

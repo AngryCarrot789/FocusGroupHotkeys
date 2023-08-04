@@ -65,6 +65,8 @@
     <Compile Include="AdvancedContextService\AdvancedContextMenu.cs" />
     <Compile Include="AdvancedContextService\AdvancedMenuItem.cs" />
     <Compile Include="AdvancedContextService\AdvancedMenuItemStyleSelector.cs" />
+    <Compile Include="AdvancedContextService\AdvancedShortcutMenuItem.cs" />
+    <Compile Include="AdvancedContextService\IWPFContextGenerator.cs" />
     <Compile Include="Converters\BoolConverter.cs" />
     <Compile Include="Converters\EnumConverter.cs" />
     <Compile Include="Converters\NullConverter.cs" />
@@ -74,12 +76,23 @@
       <DependentUpon>MainWindow.xaml</DependentUpon>
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="Shortcuts\AppShortcutProcessor.cs" />
-    <Compile Include="Shortcuts\Bindings\ShortcutActionBinding.cs" />
+    <Compile Include="Resources\I18N\LangType.cs" />
+    <Compile Include="Resources\I18N\LocalizationController.cs" />
+    <Compile Include="Resources\I18N\WPFDictionaryTranslator.cs" />
+    <Compile Include="Shortcuts\ActivationHandlerReference.cs" />
+    <Compile Include="Shortcuts\Bindings\InputStateBinding.cs" />
+    <Compile Include="Shortcuts\Bindings\InputStateCollection.cs" />
     <Compile Include="Shortcuts\Bindings\ShortcutCommandBinding.cs" />
-    <Compile Include="Shortcuts\Converters\ActionIdToShortcutGestureConverter.cs" />
+    <Compile Include="Shortcuts\Bindings\ShortcutCommandCollection.cs" />
+    <Compile Include="Shortcuts\BoolBox.cs" />
+    <Compile Include="Shortcuts\Converters\ActionIdToGestureConverter.cs" />
     <Compile Include="Shortcuts\Converters\GlobalUpdateShortcutGestureConverter.cs" />
-    <Compile Include="Shortcuts\Converters\ShortcutPathToGestureConverter.cs" />
+    <Compile Include="Shortcuts\Converters\KeyStrokeStringConverter.cs" />
+    <Compile Include="Shortcuts\Converters\MouseStrokeStringConverter.cs" />
+    <Compile Include="Shortcuts\Converters\ShortcutIdToGestureConverter.cs" />
+    <Compile Include="Shortcuts\Converters\ShortcutIdToHeaderConverter.cs" />
+    <Compile Include="Shortcuts\Converters\ShortcutIdToToolTipConverter.cs" />
+    <Compile Include="Shortcuts\Converters\ShortcutPathToInputGestureTextConverter.cs" />
     <Compile Include="Shortcuts\Dialogs\KeyboardDialogService.cs" />
     <Compile Include="Shortcuts\Dialogs\KeyStrokeInputWindow.xaml.cs">
       <DependentUpon>KeyStrokeInputWindow.xaml</DependentUpon>
@@ -88,6 +101,7 @@
     <Compile Include="Shortcuts\Dialogs\MouseStrokeInputWindow.xaml.cs">
       <DependentUpon>MouseStrokeInputWindow.xaml</DependentUpon>
     </Compile>
+    <Compile Include="Shortcuts\KeyUtils.cs" />
     <Compile Include="Shortcuts\ShortcutActivateHandler.cs" />
     <Compile Include="Shortcuts\ShortcutUtils.cs" />
     <Compile Include="Shortcuts\UIFocusGroup.cs" />
@@ -96,11 +110,11 @@
     <Compile Include="Shortcuts\Views\ShortcutEditorWindow.xaml.cs">
       <DependentUpon>ShortcutEditorWindow.xaml</DependentUpon>
     </Compile>
-    <Compile Include="Shortcuts\Views\ShortcutManagerDialogService.cs" />
     <Compile Include="Shortcuts\Views\ShortcutPathToInputGestureTextConverter.cs" />
     <Compile Include="Shortcuts\VisualTreeUtils.cs" />
-    <Compile Include="Shortcuts\WPFKeyMapDeserialiser.cs" />
+    <Compile Include="Shortcuts\WPFKeyMapSerialiser.cs" />
     <Compile Include="Shortcuts\WPFShortcutManager.cs" />
+    <Compile Include="Shortcuts\WPFShortcutProcessor.cs" />
     <Compile Include="Themes\Attached\CornerHelper.cs" />
     <Compile Include="Themes\Attached\MenuHelper.cs" />
     <Compile Include="Themes\Attached\PasswordBoxHelper.cs" />
@@ -156,7 +170,10 @@
     <None Include="App.config" />
   </ItemGroup>
   <ItemGroup>
-    <Resource Include="SomeXML.xml" />
+    <Content Include="Keymap.xml">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Keymap.xsd" />
   </ItemGroup>
   <ItemGroup>
     <Page Include="AdvancedContextService\ContextStyles.xaml">
@@ -167,6 +184,7 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </Page>
+    <Page Include="Resources\I18N\Text\en.xaml" />
     <Page Include="Shortcuts\Dialogs\KeyStrokeInputWindow.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>

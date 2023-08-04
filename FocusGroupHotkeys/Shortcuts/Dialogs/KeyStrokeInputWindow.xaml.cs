@@ -33,7 +33,7 @@ namespace FocusGroupHotkeys.Shortcuts.Dialogs {
                 this.InputBox.Text = "";
             }
             else {
-                this.InputBox.Text = KeyStrokeRepresentationConverter.ToStringFunction(stroke.KeyCode, stroke.Modifiers, stroke.IsKeyRelease, false);
+                this.InputBox.Text = KeyStrokeRepresentationConverter.ToStringFunction(stroke.KeyCode, stroke.Modifiers, stroke.IsRelease, false);
             }
         }
 

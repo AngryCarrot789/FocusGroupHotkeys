@@ -32,6 +32,10 @@ namespace FocusGroupHotkeys.Core.Shortcuts {
         /// </summary>
         bool HasSecondaryStrokes { get; }
 
+        // In terms of adding multiple shortcuts to do the same thing (e.g. CTRL+R and F2 to rename), you
+        // can just create a 2nd shortcut. Cannot add some sort of "InputStrokeSet", and use them below, because
+        // what if the two shortcuts are CTRL+R,CTRL+R and F12?
+
         /// <summary>
         /// This shortcut's primary input stroke for initial or full activation
         /// </summary>
@@ -49,6 +53,9 @@ namespace FocusGroupHotkeys.Core.Shortcuts {
         /// <exception cref="InvalidOperationException">This shortcut is empty (has no input strokes)</exception>
         IShortcutUsage CreateUsage();
 
+        /// <summary>
+        /// A helper function for checking if <see cref="PrimaryStroke"/> equals the given stroke (to prevent additional boxing of possible struct types)
+        /// </summary>
         bool IsPrimaryStroke(IInputStroke input);
     }
 }
