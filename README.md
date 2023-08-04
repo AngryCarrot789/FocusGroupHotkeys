@@ -89,3 +89,7 @@ And then in your shortcut XML file:
 ```
 
 As long as you make sure to load the XML file and the view model registers that action, then it should work without doing anything else. The IHaveDataContext object, which is passed to the `AnActionEventArgs`, will contain the original source object, the data context of the original source object, and the root event sender (normally a window)
+
+### Managers and processors
+By default, the `ShortcutProcessor` does nothing when shortcuts are activated, so you would need to extend it and override the `OnShortcutActivated` and/or `OnSecondShortcutUsageCompleted` function to do something. The WPF project does in and invokes actions and the shortcut command bindings
+
